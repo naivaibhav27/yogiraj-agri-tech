@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="mb-8">
+    <h2 class="text-3xl font-extrabold text-white flex items-center gap-3">
+        <i class="fa-solid fa-tractor text-emerald-400"></i> Machinery Rentals
+    </h2>
+    <p class="text-xs text-slate-400 mt-1">Book heavy equipment and drones at hourly or daily rates</p>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    {% for rental in rentals %}
+    <div class="glass-card rounded-3xl p-7 flex flex-col justify-between hover:border-emerald-400/50 transition duration-300 group hover:-translate-y-1 glow-emerald-hover border border-emerald-900/30">
+        <div>
+            {% if rental.youtube_url %}
+                <div class="aspect-video w-full rounded-xl overflow-hidden mb-4">
+                    <iframe src="{{ rental.youtube_url }}" class="w-full h-full" frameborder="0" allowfullscreen></iframe>
+                </div>
+            {% elif rental.media_url %}
+                {% if rental.media_type == 'video' %}
+                    <video src="/static/uploads/{{ rental.media_url }}" controls class="w-full h-48 object-cover rounded-xl mb-4"></video>
+                {% else %}
+                    <img src="/static/uploads/{{ rental.media_url }}" class="w-full h-48 object-cover rounded-xl mb-4">
+                {% endif %}
+            {% else %}
+                <div class="w-full h-48 bg-slate-800 rounded-xl mb-4 flex items-center justify-center text-slate-500 text-xs">
+                    No Media
+                </div>
+            {% endif %}
+
+            <div class="flex justify-between items-start mb-3">
+                <div>
+                    <h3 class="font-extrabold text-2xl text-white group-hover:text-emerald-300 transition">{{ rental.title }}</h3>
+                    <p class="text-xs text-emerald-400 font-medium">{{ rental.location }}</p>
+                </div>
+                <span class="bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 text-xs px-3 py-1 rounded-full font-bold">Available</span>
+            </div>
+            <p class="text-xs text-slate-300 leading-relaxed mb-4">{{ rental.description }}</p>
+            {% if rental.extra_info %}
+                <p class="text-[10px] text-slate-500 italic">{{ rental.extra_info }}</p>
+            {% endif %}
+        </div>
+        <div class="flex items-center justify-between pt-5 border-t border-emerald-900/30">
+            <div>
+                <span class="text-xs text-slate-400 block">Rental Fee</span>
+                <span class="text-2xl font-black text-emerald-400">₹{{ rental.daily_rate }} <span class="text-xs text-slate-400 font-normal">/ Day</span></span>
+            </div>
+            <a href="https://wa.me/{{ admin_phone }}?text=Hello%20Yogiraj%20Agri-Tech,%20I%20want%20to%20rent%20{{ rental.title|urlencode }}" target="_blank" class="px-5 py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold rounded-xl text-xs transition duration-200 shadow-md flex items-center gap-2">
+    <i class="fa-brands fa-whatsapp"></i> Book Now
+</a>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-span-2 text-center py-16">
+        <div class="text-5xl mb-4 text-slate-700">🚜</div>
+        <p class="text-slate-500">No rental equipment available at the moment.</p>
+        <p class="text-xs text-slate-600 mt-1">Check back soon for new listings.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

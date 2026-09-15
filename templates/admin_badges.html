@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-4xl mx-auto mt-10">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="font-display text-2xl font-semibold text-white flex items-center gap-3">
+            <span class="w-11 h-11 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-center text-amber-400">
+                <i class="fa-solid fa-trophy"></i>
+            </span>
+            Achievement Badges
+        </h2>
+        <a href="/admin" class="text-xs text-slate-400 hover:text-amber-300 border border-slate-700 hover:border-amber-400/40 px-3 py-1.5 rounded-lg transition">← Back to Dashboard</a>
+    </div>
+
+    <div class="glass-card rounded-3xl p-6 md:p-8 border border-amber-500/20">
+
+        <!-- Add Form -->
+        <form method="POST" enctype="multipart/form-data" class="mb-10 p-5 bg-slate-950/60 rounded-2xl border border-amber-500/20">
+            <h3 class="text-amber-300 font-display font-semibold mb-4 text-sm flex items-center gap-2">
+                <i class="fa-solid fa-plus"></i> Add New Badge
+            </h3>
+            <input type="hidden" name="action" value="add">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Badge Title</label>
+                    <input type="text" name="title" placeholder="e.g. 200+ Happy Farmers" required
+                        class="w-full bg-slate-950/80 border border-amber-500/25 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-500/10 transition">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Subtitle (Optional)</label>
+                    <input type="text" name="description" placeholder="e.g. Trusted by farmers"
+                        class="w-full bg-slate-950/80 border border-amber-500/25 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-500/10 transition">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">FontAwesome Icon</label>
+                    <div class="relative">
+                        <input type="text" name="icon" id="badgeIconInput" placeholder="fa-seedling, fa-star, fa-truck" required
+                            oninput="document.getElementById('iconPreview').className = 'fa-solid ' + (this.value || 'fa-star') + ' text-amber-400';"
+                            class="w-full bg-slate-950/80 border border-amber-500/25 rounded-xl pl-11 pr-4 py-2.5 text-white text-sm focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-500/10 transition">
+                        <i id="iconPreview" class="fa-solid fa-star text-amber-400 absolute left-4 top-1/2 -translate-y-1/2"></i>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Upload Logo / Image (PNG, JPG)</label>
+                    <input type="file" name="badge_image" accept="image/*"
+                        class="w-full bg-slate-950/80 border border-dashed border-amber-500/30 rounded-xl px-4 py-2.5 text-slate-400 text-sm focus:outline-none focus:border-amber-400 transition file:mr-3 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:bg-amber-500/20 file:text-amber-300 hover:file:bg-amber-500/30">
+                </div>
+
+            </div>
+
+            <button type="submit" class="mt-5 w-full bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 font-bold py-2.5 rounded-xl text-sm hover:scale-[1.01] transition flex items-center justify-center gap-2">
+                <i class="fa-solid fa-plus"></i> Add Badge
+            </button>
+        </form>
+
+        <!-- Current Badges -->
+        <h3 class="text-white font-display font-semibold mb-4 text-sm flex items-center gap-2">
+            <i class="fa-solid fa-list text-emerald-400"></i> Current Badges
+            <span class="text-xs font-normal text-slate-500">({{ badges|length }})</span>
+        </h3>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {% for badge in badges %}
+            <div class="flex items-center justify-between bg-slate-950/60 p-3.5 rounded-2xl border border-slate-800 hover:border-amber-500/30 transition">
+                <div class="flex items-center gap-3.5 min-w-0">
+                    <div class="w-11 h-11 rounded-full bg-slate-900 border border-amber-500/20 flex items-center justify-center overflow-hidden shrink-0">
+                        {% if badge[5] %}
+                            <img src="/static/uploads/{{ badge[5] }}" class="w-full h-full object-cover">
+                        {% else %}
+                            <i class="fa-solid {{ badge[2] }} text-amber-400 text-lg"></i>
+                        {% endif %}
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-white font-semibold text-sm truncate">{{ badge[1] }}</p>
+                        <p class="text-slate-400 text-xs truncate">{{ badge[4] or 'No description' }}</p>
+                    </div>
+                </div>
+                <form method="POST" class="shrink-0">
+                    <input type="hidden" name="action" value="delete">
+                    <input type="hidden" name="badge_id" value="{{ badge[0] }}">
+                    <button type="submit" onclick="return confirm('Remove this badge?')" class="text-rose-400 hover:text-white hover:bg-rose-500/80 text-xs px-2.5 py-1.5 rounded-lg transition">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </form>
+            </div>
+            {% else %}
+            <div class="sm:col-span-2 text-center py-10 text-slate-500 text-sm border border-dashed border-slate-800 rounded-2xl">
+                <i class="fa-solid fa-trophy text-2xl mb-2 text-slate-700"></i>
+                <p>No badges added yet. Add your first one above!</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

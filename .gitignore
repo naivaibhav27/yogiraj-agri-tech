@@ -1,0 +1,70 @@
+.env
+venv/
+__pycache__/
+*.pyc
+database.db
+*.sqlite3
+.DS_Store
+database_backup.db
+
+# Local databases
+database_backup.db
+*.db-shm
+*.db-wal
+
+
+
+# Local/exported data
+export_data/
+
+# Local project documents
+Project Documents/
+
+# Local notes
+Notes/
+
+# Virtual environments
+.venv/
+venv/
+
+# macOS
+.DS_Store
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Sensitive/exported application data
+export_data/
+
+# Academic/project documents
+Project Documents/
+
+# Notes
+Notes/
+
+# Virtual environments
+.venv/
+venv/
+
+# macOS
+.DS_Store
+
+# Deployment exclusions
+export_data/
+Project Documents/
+
+# Do not deploy these
+export_data/
+Project Documents/
+
+# Local development / migration / testing scripts
+convert_schema.py
+export_sqlite.py
+generate_ai_context.py
+import_to_postgres.py
+inspect_app.py
+migrate_to_postgres.py
+test_email.py
+test_mistral.py
+test_postgres.py

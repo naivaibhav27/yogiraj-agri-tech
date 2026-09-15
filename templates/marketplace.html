@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container my-4">
+    <h3 class="fw-bold text-success mb-4"><i class="fa-solid fa-wheat-awn me-2"></i>Farm-to-Consumer Produce</h3>
+    
+    <div class="row g-4">
+        <!-- Listing 1 -->
+        <div class="col-md-6">
+            <div class="card card-agri p-3">
+                <div class="card-body">
+                    <h5 class="fw-bold">Fresh Harvested Organic Wheat</h5>
+                    <p class="text-muted mb-1"><strong>Quantity Available:</strong> 20 Quintals</p>
+                    <p class="fs-5 fw-bold text-primary mt-2">₹2,400 / Quintal</p>
+
+                    <button class="btn btn-success w-100 fw-bold mt-2" 
+                            onclick="buyViaWhatsApp('Farm Produce', 'Organic Wheat Harvest', '2400/Quintal', 'Available: 20 Quintals')">
+                        <i class="fa-brands fa-whatsapp me-2"></i>Order Produce via WhatsApp
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/static/js/whatsapp-buy.js"></script>
+{% endblock %}

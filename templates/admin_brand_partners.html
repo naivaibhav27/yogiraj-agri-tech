@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-4xl mx-auto mt-10 p-6 glass-card rounded-3xl border border-emerald-500/20">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-handshake text-amber-400"></i> Manage Brand Partners
+        </h2>
+        <a href="/admin" class="text-xs text-slate-400 hover:text-white border border-slate-700 px-3 py-1.5 rounded-lg transition">← Back to Dashboard</a>
+    </div>
+
+    <!-- Add Form -->
+    <form method="POST" class="mb-10 p-4 bg-slate-900/50 rounded-xl border border-amber-500/20">
+        <h3 class="text-amber-400 font-bold mb-3 text-sm">Add New Partner / Accreditation</h3>
+        <input type="hidden" name="action" value="add">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <input type="text" name="name" placeholder="Partner Name (e.g. Santosh Valand)" required class="w-full bg-slate-900 border border-amber-500/30 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-amber-400">
+            <input type="text" name="logo_url" placeholder="Logo URL (Optional)" class="w-full bg-slate-900 border border-amber-500/30 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-amber-400">
+            <div class="flex gap-2">
+                <input type="text" name="link_url" placeholder="Website Link (Optional)" class="flex-1 bg-slate-900 border border-amber-500/30 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-amber-400">
+                <button type="submit" class="bg-gradient-to-r from-amber-500 to-yellow-600 text-slate-950 font-bold px-4 py-2 rounded-lg text-sm hover:scale-105 transition">+ Add</button>
+            </div>
+        </div>
+    </form>
+
+    <!-- Current Partners List -->
+    <h3 class="text-white font-bold mb-3 text-sm">Current Partners</h3>
+    <div class="space-y-2">
+        {% for partner in partners %}
+        <div class="flex items-center justify-between bg-slate-900/50 p-3 rounded-xl border border-slate-800">
+            <div class="flex items-center gap-3">
+                {% if partner[2] %}
+                <img src="{{ partner[2] }}" class="w-8 h-8 rounded-full object-cover bg-slate-800">
+                {% else %}
+                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-amber-500 to-yellow-600 flex items-center justify-center text-slate-950 text-xs font-bold">🏆</div>
+                {% endif %}
+                <span class="text-white text-sm font-medium">{{ partner[1] }}</span>
+                {% if partner[3] %}
+                <a href="{{ partner[3] }}" target="_blank" class="text-[10px] text-amber-400/70 hover:text-amber-400 underline">Visit</a>
+                {% endif %}
+            </div>
+            <form method="POST">
+                <input type="hidden" name="action" value="delete">
+                <input type="hidden" name="partner_id" value="{{ partner[0] }}">
+                <button type="submit" class="text-red-400 hover:text-red-300 text-xs hover:bg-red-500/10 px-2 py-1 rounded transition">✕ Remove</button>
+            </form>
+        </div>
+        {% else %}
+        <p class="text-slate-500 text-sm text-center py-4">No partners added yet. Add your first one above!</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

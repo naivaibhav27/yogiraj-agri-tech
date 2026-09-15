@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="mb-8">
+    <h2 class="text-3xl font-extrabold text-white flex items-center gap-3">
+        <i class="fa-solid fa-store text-emerald-400"></i> Agricultural Store
+    </h2>
+    <p class="text-xs text-slate-400 mt-1">Premium fertilizers, hybrid seeds, Spray Pumps, Jatka & more</p>
+</div>
+
+<!-- Grid Container -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="productGrid">
+    {% for product in products %}
+    
+    <!-- Single Premium Card -->
+    <div class="tilt-card glass-card rounded-2xl overflow-hidden hover:border-emerald-400/50 transition duration-300 group hover:-translate-y-1 glow-emerald-hover border border-emerald-900/30 h-full cursor-pointer relative">
+        
+        <!-- 1. Media Section -->
+        <div class="relative w-full h-full aspect-video md:aspect-auto bg-slate-800">
+            
+            <!-- If YouTube Video exists -->
+            {% if product.youtube_url %}
+                <div class="relative w-full h-full">
+                    <!-- YouTube Thumbnail -->
+                    {% set video_id = product.youtube_url.split('/')[-1].split('?')[0] %}
+                    <img src="https://img.youtube.com/vi/{{ video_id }}/hqdefault.jpg" 
+                         class="w-full h-full object-cover group-hover:scale-105 transition duration-500" 
+                         alt="{{ product.title }}">
+                    
+                    <!-- Play Button Overlay -->
+                    <div class="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/20 transition">
+                        <div class="w-16 h-16 rounded-full bg-red-600/90 hover:bg-red-500 flex items-center justify-center shadow-2xl transform group-hover:scale-110 transition duration-300">
+                            <i class="fa-solid fa-play text-white text-2xl ml-1"></i>
+                        </div>
+                    </div>
+                    
+                    <!-- Video Badge -->
+                    <div class="absolute top-3 right-3 bg-red-600/90 text-white text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-lg">
+                        <i class="fa-brands fa-youtube"></i> Watch
+                    </div>
+                </div>
+                
+            <!-- If Image exists -->
+            {% elif product.media_url %}
+                {% if product.media_type == 'video' %}
+                    <video src="/static/uploads/{{ product.media_url }}" controls class="w-full h-full object-cover"></video>
+                {% else %}
+                    <img src="/static/uploads/{{ product.media_url }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                {% endif %}
+            
+            <!-- No Media -->
+            {% else %}
+                <div class="w-full h-full flex items-center justify-center text-slate-500 text-xs">
+                    No Media
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- 2. Floating Content Overlay (Always Visible) -->
+        <div class="absolute bottom-0 left-0 w-full p-4 bg-gradient-to-t from-slate-950/90 via-slate-950/60 to-transparent">
+            <span class="text-xs font-bold text-amber-400 bg-amber-950/80 border border-amber-500/30 px-2.5 py-1 rounded-md self-start mb-2 inline-block">
+                {{ product.category }}
+            </span>
+            <h3 class="text-xl font-bold text-white group-hover:text-emerald-300 transition">
+                {{ product.title }}
+            </h3>
+            <p class="text-slate-300 text-xs line-clamp-2 mt-1 opacity-90">
+                {{ product.description }}
+            </p>
+            {% if product.extra_info %}
+                <p class="text-[10px] text-slate-400 italic line-clamp-1">{{ product.extra_info }}</p>
+            {% endif %}
+        </div>
+
+        <!-- 3. Hidden Price & Order Button (Reveals on Hover/Click) -->
+        <div class="absolute inset-0 bg-slate-950/70 backdrop-blur-sm flex flex-col items-center justify-center gap-4 opacity-0 group-hover:opacity-100 transition duration-300">
+            
+            <!-- YouTube Video Button (If exists) -->
+            {% if product.youtube_url %}
+                {% set video_id = product.youtube_url.split('/')[-1].split('?')[0] %}
+                <a href="#" onclick="event.stopPropagation(); openYouTubeModal('{{ product.youtube_url }}', '{{ product.title }}')" 
+                   class="transform translate-y-4 group-hover:translate-y-0 transition duration-300 delay-75 inline-flex items-center gap-2 bg-red-600 hover:bg-red-500 text-white font-bold px-6 py-3 rounded-2xl shadow-lg shadow-red-500/20">
+                    <i class="fa-brands fa-youtube text-xl"></i>
+                    Watch Video
+                </a>
+            {% endif %}
+            
+            <!-- Price Reveal -->
+            <div class="text-center transform translate-y-4 group-hover:translate-y-0 transition duration-300 delay-75">
+                <span class="text-xs text-slate-300 block">Price</span>
+                <span class="text-4xl font-black text-emerald-400">₹{{ product.price }}</span>
+                {% if product.stock_qty %}
+                    <span class="text-[10px] text-slate-400 block mt-1">Stock: {{ product.stock_qty }} units</span>
+                {% endif %}
+            </div>
+
+            <!-- WhatsApp Order Button -->
+            <a href="https://wa.me/{{ admin_phone }}?text=Hello%20Yogiraj%20Agri-Tech%2C%20I%20want%20to%20order%20{{ product.title|urlencode }}%20(₹{{ product.price }})" target="_blank" 
+               class="transform translate-y-4 group-hover:translate-y-0 transition duration-300 delay-100 inline-flex items-center gap-2 bg-gradient-to-r from-green-600 to-emerald-500 hover:brightness-110 text-slate-950 font-bold px-6 py-3 rounded-2xl shadow-lg shadow-emerald-500/20">
+                <i class="fa-brands fa-whatsapp text-xl"></i>
+                Order Now
+            </a>
+            
+            <!-- View Details Link -->
+            <a href="/product/{{ product.id }}" 
+               class="transform translate-y-4 group-hover:translate-y-0 transition duration-300 delay-150 text-xs text-slate-400 hover:text-emerald-300">
+                View Details →
+            </a>
+        </div>
+        
+    </div>
+    {% else %}
+    <div class="col-span-3 text-center py-16">
+        <div class="text-5xl mb-4 text-slate-700">🌱</div>
+        <p class="text-slate-500">No products available in the store yet.</p>
+        <p class="text-xs text-slate-600 mt-1">Admin can add products from the dashboard.</p>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- YouTube Modal -->
+<div id="youtubeModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-black/80 backdrop-blur-sm">
+    <div class="relative w-full max-w-4xl mx-4 bg-slate-900 rounded-3xl overflow-hidden border border-emerald-500/20 shadow-2xl">
+        <div class="flex justify-between items-center p-4 border-b border-emerald-900/30">
+            <h3 class="text-white font-display font-semibold text-lg" id="youtubeModalTitle">Video</h3>
+            <button onclick="closeYouTubeModal()" class="text-slate-400 hover:text-white text-2xl">&times;</button>
+        </div>
+        <div class="aspect-video w-full">
+            <iframe id="youtubeFrame" class="w-full h-full" frameborder="0" allowfullscreen></iframe>
+        </div>
+    </div>
+</div>
+
+<!-- Hidden Load More Trigger -->
+<div id="loadMoreTrigger" class="h-10 w-full" data-total="{{ total_count|default(0) }}" data-loaded="{{ products|length }}"></div>
+
+<script>
+let currentPage = 1;
+let isLoading = false;
+let productsPerPage = 9;
+
+// YouTube Modal Functions
+function openYouTubeModal(url, title) {
+    const modal = document.getElementById('youtubeModal');
+    const frame = document.getElementById('youtubeFrame');
+    const titleEl = document.getElementById('youtubeModalTitle');
+    
+    // Convert to embed URL if needed
+    let embedUrl = url;
+    if (url.includes('watch?v=')) {
+        embedUrl = url.replace('watch?v=', 'embed/');
+    } else if (url.includes('youtu.be/')) {
+        const videoId = url.split('youtu.be/')[1].split('?')[0];
+        embedUrl = `https://www.youtube.com/embed/${videoId}`;
+    }
+    
+    frame.src = embedUrl + '?autoplay=1';
+    titleEl.textContent = title || 'Video';
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeYouTubeModal() {
+    const modal = document.getElementById('youtubeModal');
+    const frame = document.getElementById('youtubeFrame');
+    frame.src = '';
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    document.body.style.overflow = 'auto';
+}
+
+// Close modal on ESC key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeYouTubeModal();
+    }
+});
+
+// Close modal on background click
+document.getElementById('youtubeModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeYouTubeModal();
+    }
+});
+
+// Get total and loaded from data attributes
+const triggerElement = document.getElementById('loadMoreTrigger');
+const totalCount = parseInt(triggerElement.dataset.total || '0');
+const loadedCount = parseInt(triggerElement.dataset.loaded || '0');
+let hasMore = loadedCount < totalCount;
+
+const observer = new IntersectionObserver(async (entries) => {
+    if (entries[0].isIntersecting && !isLoading && hasMore) {
+        isLoading = true;
+        currentPage++;
+        try {
+            const response = await fetch(`/store?page=${currentPage}`);
+            const html = await response.text();
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const newProducts = doc.getElementById('productGrid');
+            
+            if (newProducts) {
+                document.getElementById('productGrid').insertAdjacentHTML('beforeend', newProducts.innerHTML);
+            }
+            
+            if (currentPage * productsPerPage >= totalCount) {
+                hasMore = false;
+                triggerElement.style.display = 'none';
+            }
+        } catch (error) {
+            console.error('Load more error:', error);
+        } finally {
+            isLoading = false;
+        }
+    }
+}, { threshold: 0.1 });
+
+observer.observe(triggerElement);
+</script>
+{% endblock %}

@@ -1,0 +1,729 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<style>
+/* ============================================
+   🤖 DR. KRISHI LIVE CARD — Animations
+   ============================================ */
+@keyframes pulse-ring {
+    0%, 100% { opacity: 0.3; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(1.02); }
+}
+.animate-pulse-ring { animation: pulse-ring 3s ease-in-out infinite; }
+
+@keyframes bob {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-3px); }
+}
+.animate-bob { animation: bob 2s ease-in-out infinite; }
+
+@keyframes orbit {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+.animate-orbit { animation: orbit 4s linear infinite; transform-origin: center; }
+
+@keyframes ping-slow-dot {
+    0% { transform: scale(1); opacity: 0.8; }
+    70% { transform: scale(2.2); opacity: 0; }
+    100% { transform: scale(1); opacity: 0; }
+}
+.animate-ping-slow { animation: ping-slow-dot 2s cubic-bezier(0, 0, 0.2, 1) infinite; }
+
+@keyframes shine {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+.animate-shine { background-size: 200% 100%; animation: shine 3s linear infinite; }
+
+.typewriter-cursor {
+    display: inline-block;
+    color: #34d399;
+    font-weight: 300;
+    margin-left: 1px;
+    animation: blink 0.8s step-end infinite;
+}
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+}
+
+.particle {
+    position: absolute;
+    width: 4px; height: 4px; border-radius: 50%;
+    background: rgba(52, 211, 153, 0.4);
+    box-shadow: 0 0 6px rgba(52, 211, 153, 0.6);
+}
+.p1 { top: 20%; left: 10%; animation: float 8s ease-in-out infinite; }
+.p2 { top: 60%; left: 85%; animation: float 10s ease-in-out infinite 1s; }
+.p3 { top: 80%; left: 20%; animation: float 7s ease-in-out infinite 2s; }
+.p4 { top: 30%; left: 70%; animation: float 9s ease-in-out infinite 3s; }
+.p5 { top: 50%; left: 40%; animation: float 11s ease-in-out infinite 0.5s; }
+
+@keyframes float {
+    0%, 100% { transform: translateY(0) translateX(0); opacity: 0.3; }
+    25% { transform: translateY(-15px) translateX(8px); opacity: 0.8; }
+    50% { transform: translateY(-8px) translateX(-5px); opacity: 0.5; }
+    75% { transform: translateY(-20px) translateX(10px); opacity: 0.7; }
+}
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
+}
+.animate-shake { animation: shake 0.3s ease-in-out; }
+</style>
+
+<!-- ============================================ -->
+<!-- ✨ GOLDEN BLINKING BRAND PARTNERS TICKER ✨ -->
+<!-- ============================================ -->
+<div id="partnerTicker" class="mb-6 glass-card rounded-2xl py-3 px-4 border border-amber-500/30 overflow-hidden relative" style="background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(10px);">
+    <div class="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-amber-400 to-transparent animate-pulse"></div>
+    <div class="flex items-center gap-4 whitespace-nowrap">
+        <div class="flex items-center gap-2 shrink-0 bg-gradient-to-r from-amber-500 to-yellow-600 text-slate-950 px-3 py-1 rounded-full text-xs font-extrabold uppercase shadow-[0_0_20px_rgba(245,158,11,0.3)] animate-pulse">
+            <i class="fa-solid fa-trophy"></i> Trusted By
+        </div>
+        <div class="overflow-hidden w-full relative">
+            <div class="flex gap-8 animate-scroll">
+                <div id="tickerContent" class="flex gap-8 items-center">
+                    <span class="text-amber-200/80 text-sm font-medium tracking-wide">Loading partners...</span>
+                </div>
+                <div id="tickerContentDup" class="flex gap-8 items-center"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    @keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+    .animate-scroll { display: flex; width: max-content; animation: scroll 25s linear infinite; }
+    .animate-scroll:hover { animation-play-state: paused; }
+</style>
+
+<script>
+async function loadPartners() {
+    try {
+        const response = await fetch('/api/brand_partners');
+        const partners = await response.json();
+        const tickerContent = document.getElementById('tickerContent');
+        const tickerContentDup = document.getElementById('tickerContentDup');
+        if (partners.length === 0) {
+            tickerContent.innerHTML = `<span class="text-amber-200/80 text-sm font-medium tracking-wide">✨ Yogiraj Agri-Tech - Empowering Sabarkantha Farmers ✨</span>`;
+            tickerContentDup.innerHTML = tickerContent.innerHTML; return;
+        }
+        let html = '';
+        partners.forEach(p => {
+            let nameDisplay = p.name;
+            if (p.logo_url) { nameDisplay = `<img src="${p.logo_url}" class="h-6 w-auto inline-block align-middle rounded-full border border-amber-500/30 mr-2"> ${p.name}`; }
+            if (p.link_url) {
+                html += `<a href="${p.link_url}" target="_blank" class="flex items-center gap-2 text-amber-200/90 hover:text-amber-300 transition text-sm font-medium">${nameDisplay} <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-amber-500/50"></i></a>`;
+            } else {
+                html += `<span class="flex items-center gap-2 text-amber-200/90 text-sm font-medium">${nameDisplay}</span>`;
+            }
+        });
+        tickerContent.innerHTML = html;
+        tickerContentDup.innerHTML = html;
+    } catch (error) {
+        document.getElementById('tickerContent').innerHTML = `<span class="text-amber-200/80 text-sm font-medium tracking-wide">🌟 Yogiraj Agri-Tech - Smart Farming. Better Future. 🌟</span>`;
+    }
+}
+document.addEventListener('DOMContentLoaded', loadPartners);
+</script>
+
+<!-- ============================================ -->
+<!-- 🏆 DYNAMIC ACHIEVEMENT BADGES -->
+<!-- ============================================ -->
+{% if badges and badges|length > 0 %}
+<div class="mb-8">
+    <div class="glass-card rounded-2xl p-4 border border-amber-500/20 flex flex-wrap justify-center items-center gap-6 md:gap-10 relative overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-r from-amber-500/5 via-transparent to-amber-500/5 pointer-events-none"></div>
+        {% for badge in badges %}
+        <div class="flex items-center gap-3 relative z-10 group hover:-translate-y-1 transition duration-300 cursor-default">
+            <div class="w-12 h-12 rounded-full bg-slate-900/80 border border-amber-500/30 flex items-center justify-center overflow-hidden group-hover:scale-110 transition duration-300 shadow-[0_0_15px_rgba(251,191,36,0.1)]">
+                {% if badge.image_url %}
+                    <img src="/static/uploads/{{ badge.image_url }}" class="w-full h-full object-cover">
+                {% else %}
+                    <i class="fa-solid {{ badge.icon }} text-amber-400 text-xl"></i>
+                {% endif %}
+            </div>
+            <div class="flex flex-col">
+                <span class="text-white font-bold text-sm tracking-wide">{{ badge.title }}</span>
+                {% if badge.description %}
+                <span class="text-slate-400 text-[10px]">{{ badge.description }}</span>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Hero Section -->
+<div class="mb-12">
+    <div class="glass-card rounded-3xl p-6 md:p-12 relative overflow-hidden glow-emerald flex flex-col lg:flex-row items-center justify-between gap-8 border border-emerald-500/20">
+        <div class="z-10 lg:w-2/3">
+            <span class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 text-xs font-bold uppercase tracking-wider mb-5">
+                <i class="fa-solid fa-sparkles text-emerald-400"></i> Next-Gen AI Smart Farming
+            </span>
+            <h2 class="text-3xl md:text-5xl font-extrabold text-white mb-4 leading-tight">
+                Empowering Farmers in <span class="bg-gradient-to-r from-emerald-400 via-teal-300 to-green-200 bg-clip-text text-transparent">Sabarkantha</span>
+            </h2>
+            <p class="text-slate-300 text-sm md:text-base mb-8 max-w-xl leading-relaxed">Seamless WhatsApp ordering for high-yield seeds and fertilizers, real-time APMC mandi price telemetry, drone rentals, and AI leaf diagnostics.</p>
+            <div class="flex flex-wrap gap-4">
+                <a href="/store" class="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 text-slate-950 font-bold px-7 py-3.5 rounded-2xl shadow-lg shadow-emerald-500/25 transition duration-300 transform hover:-translate-y-1">
+                    <span>Explore Store</span> <i class="fa-solid fa-arrow-right"></i>
+                </a>
+                <a href="/ai-advisor" class="inline-flex items-center gap-2 bg-emerald-950/80 hover:bg-emerald-900/80 border border-emerald-500/30 text-emerald-300 font-bold px-7 py-3.5 rounded-2xl transition duration-300">
+                    <i class="fa-solid fa-robot text-emerald-400"></i> <span>Ask AI Doctor</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- ============================================ -->
+        <!-- 🤖 DR. KRISHI LIVE - AI ADVISOR CARD -->
+        <!-- ============================================ -->
+        <div class="w-full lg:w-1/3 relative" id="ai-live-card">
+            <div class="absolute -inset-1 rounded-3xl bg-gradient-to-r from-emerald-500/40 via-teal-400/30 to-amber-400/40 opacity-40 blur-xl animate-pulse-ring"></div>
+
+            <div class="relative glass-card p-5 rounded-3xl border border-emerald-500/30 overflow-hidden">
+                <div class="absolute inset-0 pointer-events-none overflow-hidden rounded-3xl">
+                    <div class="particle p1"></div>
+                    <div class="particle p2"></div>
+                    <div class="particle p3"></div>
+                    <div class="particle p4"></div>
+                    <div class="particle p5"></div>
+                </div>
+
+                <div class="absolute top-3 right-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 z-20">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping-slow"></span>
+                    <span class="text-[9px] font-bold text-emerald-300 uppercase tracking-widest">Live</span>
+                </div>
+
+                <div class="flex items-center gap-3 mb-4 relative z-10">
+                    <div class="relative">
+                        <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center text-slate-950 text-xl shadow-lg shadow-emerald-500/40 animate-bob">
+                            <i class="fa-solid fa-user-doctor"></i>
+                        </div>
+                        <div class="absolute inset-0 animate-orbit">
+                            <div class="w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.9)] absolute top-0 left-1/2 -translate-x-1/2"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="font-display text-base font-bold text-white leading-tight">Dr. Krishi</h3>
+                        <p class="text-[10px] text-emerald-400 font-medium flex items-center gap-1">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                            AI Agronomist Online
+                        </p>
+                    </div>
+                </div>
+
+                <div class="mb-4 relative z-10 min-h-[48px]">
+                    <div class="flex items-start gap-2 text-[11px] text-slate-300 leading-snug">
+                        <i class="fa-solid fa-quote-left text-emerald-500/60 text-[10px] mt-0.5 shrink-0"></i>
+                        <span id="typewriter-text" class="text-slate-200"></span>
+                        <span class="typewriter-cursor">|</span>
+                    </div>
+                </div>
+
+                <div class="relative z-10 mb-3">
+                    <input type="text" id="quick-ask-input" placeholder="Type your crop problem..."
+                        class="w-full bg-slate-950/80 border border-emerald-800/50 rounded-xl pl-9 pr-3 py-2.5 text-white text-xs placeholder-slate-500 focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-500/20 transition-all duration-300 hover:border-emerald-500/70">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-emerald-400/70 text-xs"></i>
+                </div>
+
+                <div class="flex gap-1.5 mb-3 overflow-x-auto no-scrollbar relative z-10 pb-1">
+                    <button onclick="quickAsk('Meri gehu mein peela dhabba hai')" class="shrink-0 text-[10px] bg-slate-800/60 hover:bg-emerald-500/20 text-slate-300 hover:text-emerald-300 px-2.5 py-1 rounded-full border border-slate-700/50 hover:border-emerald-400/40 transition">🌾 Wheat</button>
+                    <button onclick="quickAsk('Cotton ke liye best khad kaunsi hai')" class="shrink-0 text-[10px] bg-slate-800/60 hover:bg-emerald-500/20 text-slate-300 hover:text-emerald-300 px-2.5 py-1 rounded-full border border-slate-700/50 hover:border-emerald-400/40 transition">🌿 Cotton</button>
+                    <button onclick="quickAsk('Tomato ke patte peele ho rahe hain')" class="shrink-0 text-[10px] bg-slate-800/60 hover:bg-emerald-500/20 text-slate-300 hover:text-emerald-300 px-2.5 py-1 rounded-full border border-slate-700/50 hover:border-emerald-400/40 transition">🍅 Tomato</button>
+                </div>
+
+                <button onclick="submitQuickAsk()" class="relative z-10 w-full group overflow-hidden bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-500 bg-[length:200%_100%] hover:bg-[position:100%_0] text-slate-950 font-bold py-2.5 rounded-xl text-xs shadow-lg shadow-emerald-500/30 transition-all duration-500 flex items-center justify-center gap-2 animate-shine">
+                    <i class="fa-solid fa-bolt group-hover:scale-125 transition-transform"></i>
+                    <span>Ask Dr. Krishi</span>
+                    <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
+                </button>
+
+                <div class="mt-3 pt-3 border-t border-emerald-900/40 flex items-center justify-between text-[9px] relative z-10">
+                    <span class="text-slate-500 flex items-center gap-1">
+                        <span class="w-1 h-1 rounded-full bg-emerald-400 animate-pulse"></span>
+                        Ready
+                    </span>
+                    <span class="text-slate-500">⚡ ~3 sec response</span>
+                    <span class="text-slate-500">100% Free</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ADS BANNER -->
+{% if ads and ads|length > 0 %}
+<div class="mb-12">
+    <div class="flex items-center justify-between mb-4">
+        <h3 class="text-sm font-semibold text-purple-400 flex items-center gap-2"><i class="fa-solid fa-bullhorn"></i> Sponsored</h3>
+        <span class="text-[10px] text-slate-500">Advertisement</span>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {% for ad in ads %}
+        <a href="{{ ad.link_url or '#' }}" target="_blank" onclick="trackAdClick('{{ ad.id }}')" class="glass-card rounded-2xl overflow-hidden border border-purple-500/10">
+            {% if ad.media_url %}
+                <img src="/static/uploads/{{ ad.media_url }}" class="w-full h-40 object-cover" alt="{{ ad.title }}">
+            {% else %}
+            <div class="w-full h-40 bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center"><span class="text-5xl">📢</span></div>
+            {% endif %}
+            <div class="p-4">
+                <h4 class="text-white font-bold text-sm group-hover:text-purple-400 transition">{{ ad.title }}</h4>
+                <p class="text-slate-400 text-xs mt-1 line-clamp-2">{{ ad.description or 'Special offer for farmers!' }}</p>
+                <div class="flex items-center justify-between mt-3">
+                    <span class="text-[10px] text-purple-400">✨ Sponsored</span>
+                    <span class="text-[10px] text-slate-500"><i class="fa-regular fa-eye"></i> {{ ad.views or 0 }}</span>
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Main Services Navigation Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+    <a href="/store" class="glass-card p-6 rounded-3xl hover:border-emerald-400/50 transition duration-300 group flex flex-col justify-between hover:-translate-y-1 glow-emerald-hover">
+        <div>
+            <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 text-2xl mb-4 group-hover:scale-110"><i class="fa-solid fa-store"></i></div>
+            <h3 class="text-xl font-bold text-white mb-2 group-hover:text-emerald-300 transition">Agri Products Store</h3>
+            <p class="text-xs text-slate-400 leading-relaxed">Fertilizers, hybrid seeds & pesticides with 1-click WhatsApp orders.</p>
+        </div>
+        <div class="mt-6 flex items-center gap-2 text-xs font-bold text-emerald-400"><span>Browse Products</span> <i class="fa-solid fa-chevron-right text-[10px] group-hover:translate-x-1 transition"></i></div>
+    </a>
+    <a href="/mandi" class="glass-card p-6 rounded-3xl hover:border-emerald-400/50 transition duration-300 group flex flex-col justify-between hover:-translate-y-1 glow-emerald-hover">
+        <div>
+            <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 text-2xl mb-4 group-hover:scale-110"><i class="fa-solid fa-chart-line"></i></div>
+            <h3 class="text-xl font-bold text-white mb-2 group-hover:text-emerald-300 transition">APMC Mandi Rates</h3>
+            <p class="text-xs text-slate-400 leading-relaxed">Daily commodity price tracking for Himmatnagar, Idar, and Talod yards.</p>
+        </div>
+        <div class="mt-6 flex items-center gap-2 text-xs font-bold text-emerald-400"><span>View Market Rates</span> <i class="fa-solid fa-chevron-right text-[10px] group-hover:translate-x-1 transition"></i></div>
+    </a>
+    <a href="/rentals" class="glass-card p-6 rounded-3xl hover:border-emerald-400/50 transition duration-300 group flex flex-col justify-between hover:-translate-y-1 glow-emerald-hover">
+        <div>
+            <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 text-2xl mb-4 group-hover:scale-110"><i class="fa-solid fa-tractor"></i></div>
+            <h3 class="text-xl font-bold text-white mb-2 group-hover:text-emerald-300 transition">Equipment Rentals</h3>
+            <p class="text-xs text-slate-400 leading-relaxed">Hire heavy machinery, tractors, and agricultural spray drones on-demand.</p>
+        </div>
+        <div class="mt-6 flex items-center gap-2 text-xs font-bold text-emerald-400"><span>Book Equipment</span> <i class="fa-solid fa-chevron-right text-[10px] group-hover:translate-x-1 transition"></i></div>
+    </a>
+    <a href="/ai-advisor" class="glass-card p-6 rounded-3xl hover:border-emerald-400/50 transition duration-300 group flex flex-col justify-between hover:-translate-y-1 glow-emerald-hover">
+        <div>
+            <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 text-2xl mb-4 group-hover:scale-110"><i class="fa-solid fa-robot"></i></div>
+            <h3 class="text-xl font-bold text-white mb-2 group-hover:text-emerald-300 transition">AI Crop Doctor</h3>
+            <p class="text-xs text-slate-400 leading-relaxed">Instant smart advisory for leaf diseases, soil health & fertilizer timing.</p>
+        </div>
+        <div class="mt-6 flex items-center gap-2 text-xs font-bold text-emerald-400"><span>Consult AI</span> <i class="fa-solid fa-chevron-right text-[10px] group-hover:translate-x-1 transition"></i></div>
+    </a>
+</div>
+
+<!-- Latest Updates -->
+<div class="mb-12">
+    <div class="flex items-center justify-between mb-6">
+        <h2 class="text-2xl font-extrabold text-white flex items-center gap-3"><i class="fa-solid fa-newspaper text-emerald-400"></i> Latest Updates from Yogiraj Agri-Tech</h2>
+        {% if is_admin %}
+            <a href="/admin" class="text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-1.5 border border-emerald-500/30 px-3 py-1.5 rounded-lg transition"><i class="fa-solid fa-pen-to-square"></i> Admin Panel</a>
+        {% endif %}
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for blog in blogs %}
+        <div class="glass-card rounded-2xl p-5 flex flex-col hover:border-emerald-400/50 transition duration-300 group hover:-translate-y-1 glow-emerald-hover border border-emerald-900/30">
+            {% if blog.media_items %}
+            <div class="relative w-full h-48 rounded-xl overflow-hidden mb-3 bg-slate-900">
+                <div class="media-slider"><div class="slider-container relative w-full h-full"><div class="slider-track flex transition-transform duration-500 ease-in-out h-full">
+                    {% for item in blog.media_items %}
+                    <div class="slider-slide min-w-full h-full flex items-center justify-center bg-slate-800">
+                        {% if item.type == 'youtube' %}<iframe src="{{ item.url }}" class="w-full h-full" frameborder="0" allowfullscreen></iframe>
+                        {% elif item.type == 'video' %}<video src="{{ item.url }}" controls class="w-full h-full object-contain"></video>
+                        {% else %}<img src="{{ item.url }}" class="w-full h-full object-cover" alt="{{ blog.title }}">{% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% if blog.media_items|length > 1 %}
+                <button class="slider-prev absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white w-7 h-7 rounded-full flex items-center justify-center transition z-10 text-xs"><i class="fa-solid fa-chevron-left"></i></button>
+                <button class="slider-next absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white w-7 h-7 rounded-full flex items-center justify-center transition z-10 text-xs"><i class="fa-solid fa-chevron-right"></i></button>
+                <div class="slider-dots absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+                    {% for item in blog.media_items %}
+                    <span class="slider-dot w-1.5 h-1.5 rounded-full bg-white/30 cursor-pointer transition {% if loop.first %}bg-white/70{% endif %}" data-index="{{ loop.index0 }}"></span>
+                    {% endfor %}
+                </div>
+                {% endif %}</div></div>
+            </div>
+            {% else %}
+            <div class="w-full h-48 bg-slate-800 rounded-xl mb-3 flex items-center justify-center text-slate-500 text-xs"><div class="text-center"><div class="text-3xl mb-1">📝</div>No Media</div></div>
+            {% endif %}
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-xs text-emerald-400 font-medium">{{ blog.author_name }}</span>
+                <span class="text-amber-400 text-xs">⭐ {{ blog.rating }}/5</span>
+            </div>
+            <h3 class="font-bold text-white text-base group-hover:text-emerald-300 transition">{{ blog.title }}</h3>
+            <p class="text-xs text-slate-300 mt-1 leading-relaxed flex-grow">{{ blog.content }}</p>
+            <p class="text-[10px] text-slate-500 mt-3">{{ blog.created_at }}</p>
+        </div>
+        {% else %}
+        <div class="col-span-3 text-center py-8">
+            <div class="text-4xl mb-3 text-slate-700">📝</div>
+            <p class="text-slate-500">No posts yet. Admin can add updates from the dashboard.</p>
+            {% if is_admin %}
+                <a href="/admin" class="inline-block mt-3 text-xs text-emerald-400 hover:text-emerald-300 border border-emerald-500/30 px-4 py-2 rounded-lg transition"><i class="fa-solid fa-plus"></i> Create First Post</a>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- ============================================ -->
+<!-- 👑 FOUNDER SECTION -->
+<!-- ============================================ -->
+{% if founder %}
+<div class="mb-12 mt-10 relative">
+    <div class="flex items-center justify-between gap-3 mb-6">
+        <div class="flex items-center gap-3">
+            <span class="w-1 h-8 bg-gradient-to-b from-emerald-400 to-green-600 rounded-full"></span>
+            <h2 class="text-2xl font-extrabold text-white flex items-center gap-2"><i class="fa-solid fa-crown text-emerald-400 text-xl"></i> From the Founder's Desk</h2>
+        </div>
+        {% if is_admin %}
+        <a href="/admin/founder" class="text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-1.5 border border-emerald-500/30 px-3 py-1.5 rounded-lg transition hover:bg-emerald-500/10"><i class="fa-solid fa-pen-to-square"></i> Modify Profile</a>
+        {% endif %}
+    </div>
+    <div class="glass-card rounded-3xl p-8 md:p-12 relative overflow-hidden border border-emerald-500/20 group hover:border-emerald-400/50 transition duration-500 shadow-2xl shadow-emerald-900/20">
+        <div class="absolute -top-32 -right-32 w-96 h-96 bg-emerald-500 rounded-full opacity-20 blur-[100px] group-hover:opacity-30 transition duration-1000 pointer-events-none"></div>
+        <div class="absolute -bottom-32 -left-32 w-96 h-96 bg-purple-500 rounded-full opacity-10 blur-[100px] group-hover:opacity-20 transition duration-1000 pointer-events-none"></div>
+        <div class="relative z-10 flex flex-col lg:flex-row items-center gap-10">
+            <div class="w-full lg:w-[35%] flex justify-center shrink-0">
+                <div class="relative w-full max-w-sm rounded-2xl p-1 bg-gradient-to-br from-emerald-400 via-green-500 to-emerald-600 shadow-[0_0_30px_rgba(16,185,129,0.3)]">
+                    <div class="w-full aspect-[1.5/1] rounded-2xl overflow-hidden bg-slate-900 border-4 border-slate-900">
+                        {% if founder.video_url %}
+                            <iframe class="w-full h-full rounded-2xl" src="{{ founder.video_url }}" title="Founder Video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                        {% elif founder.image_url %}
+                            <img src="/static/uploads/{{ founder.image_url }}" alt="{{ founder.name }}" class="w-full h-full object-cover rounded-2xl group-hover:scale-105 transition duration-700 ease-out">
+                        {% else %}
+                            <div class="w-full h-full bg-emerald-900/50 flex items-center justify-center text-6xl">👨‍🌾</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="w-full lg:w-[65%] text-center lg:text-left space-y-5">
+                <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold uppercase tracking-widest shadow-[0_0_15px_rgba(16,185,129,0.15)]"><i class="fa-solid fa-circle-check text-emerald-400"></i> Meet The Visionary</span>
+                <div>
+                    <h3 class="text-4xl md:text-5xl font-extrabold text-white tracking-tight drop-shadow-lg">{{ founder.name }}</h3>
+                    <p class="text-emerald-400 font-semibold text-lg mt-1 flex items-center lg:justify-start justify-center gap-2"><i class="fa-solid fa-arrow-right text-xs opacity-70"></i> {{ founder.role }}</p>
+                </div>
+                <div class="relative max-w-xl lg:max-w-full mx-auto lg:mx-0">
+                    <i class="fa-solid fa-quote-left absolute -left-3 -top-3 text-emerald-500/20 text-4xl"></i>
+                    <p class="text-slate-300 text-base md:text-lg font-medium italic pl-6 border-l-2 border-emerald-500/50">"{{ founder.quote if founder.quote else 'Empowering Farmers with the Power of AI.' }}"</p>
+                </div>
+                <p class="text-slate-400 leading-relaxed text-sm md:text-base max-w-3xl mx-auto lg:mx-0">{{ founder.bio }}</p>
+                <div class="flex items-center gap-4 w-full lg:w-3/4 mx-auto lg:mx-0">
+                    <div class="h-[1px] flex-grow bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent"></div>
+                    <span class="text-emerald-400/50 text-xs uppercase tracking-[0.3em]">Connect</span>
+                    <div class="h-[1px] flex-grow bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent"></div>
+                </div>
+                <div class="flex justify-center lg:justify-start gap-4 mt-2">
+                    <a href="#" class="w-12 h-12 rounded-xl glass-card border border-emerald-500/20 flex items-center justify-center text-emerald-400 hover:text-white hover:bg-emerald-500 hover:border-emerald-400 hover:shadow-[0_0_20px_rgba(16,185,129,0.4)] transition duration-300 transform hover:-translate-y-1"><i class="fa-brands fa-instagram text-xl"></i></a>
+                    <a href="#" class="w-12 h-12 rounded-xl glass-card border border-emerald-500/20 flex items-center justify-center text-emerald-400 hover:text-white hover:bg-emerald-500 hover:border-emerald-400 hover:shadow-[0_0_20px_rgba(16,185,129,0.4)] transition duration-300 transform hover:-translate-y-1"><i class="fa-brands fa-facebook-f text-xl"></i></a>
+                    <a href="#" class="w-12 h-12 rounded-xl glass-card border border-emerald-500/20 flex items-center justify-center text-emerald-400 hover:text-white hover:bg-emerald-500 hover:border-emerald-400 hover:shadow-[0_0_20px_rgba(16,185,129,0.4)] transition duration-300 transform hover:-translate-y-1"><i class="fa-brands fa-youtube text-xl"></i></a>
+                    <a href="#" class="w-12 h-12 rounded-xl glass-card border border-emerald-500/20 flex items-center justify-center text-emerald-400 hover:text-white hover:bg-emerald-500 hover:border-emerald-400 hover:shadow-[0_0_20px_rgba(16,185,129,0.4)] transition duration-300 transform hover:-translate-y-1"><i class="fa-brands fa-linkedin-in text-xl"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="absolute bottom-6 right-6 text-[10px] text-emerald-500/30 font-mono tracking-widest uppercase opacity-50 group-hover:opacity-100 transition duration-500">★ Premium Profile</div>
+    </div>
+</div>
+{% endif %}
+
+<!-- ============================================ -->
+<!-- 📱 COMMUNITY -->
+<!-- ============================================ -->
+<div class="mb-12 mt-10 relative">
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[200px] bg-emerald-500/20 blur-[100px] pointer-events-none -z-10"></div>
+    <div class="flex items-center justify-between gap-3 mb-6">
+        <div class="flex items-center gap-3">
+            <span class="w-1 h-8 bg-gradient-to-b from-emerald-400 to-green-600 rounded-full"></span>
+            <h2 class="text-2xl font-extrabold text-white flex items-center gap-2">
+                <i class="fa-solid fa-users text-emerald-400 text-xl"></i> Yogiraj Farmer Network
+            </h2>
+        </div>
+        <a href="/community" class="text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-1.5 border border-emerald-500/30 px-3 py-1.5 rounded-lg transition hover:bg-emerald-500/10">
+            View All <i class="fa-solid fa-arrow-right"></i>
+        </a>
+    </div>
+    <div class="glass-card rounded-3xl p-6 md:p-10 relative overflow-hidden border border-emerald-500/20">
+        <div class="absolute -top-32 -right-32 w-96 h-96 bg-emerald-500 rounded-full opacity-10 blur-[100px] pointer-events-none"></div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 relative z-10">
+            {% for group in groups[:3] %}
+            <div class="glass-card p-5 rounded-2xl border border-emerald-500/20 hover:border-emerald-400/50 transition duration-300 group hover:-translate-y-1">
+                <div class="flex items-start justify-between mb-2">
+                    <h3 class="font-bold text-white group-hover:text-emerald-300 transition">{{ group.name }}</h3>
+                    <span class="text-[10px] bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 px-2 py-0.5 rounded-full">{{ group.category }}</span>
+                </div>
+                <p class="text-slate-400 text-sm mb-4">{{ group.description }}</p>
+                <a href="{{ group.link }}" target="_blank" class="inline-flex items-center gap-2 bg-green-600 hover:bg-green-500 text-white font-semibold px-4 py-2 rounded-xl transition text-xs shadow-lg shadow-green-600/20">
+                    <i class="fa-brands fa-whatsapp"></i> Join Group
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- STATS -->
+<div class="mb-12 mt-10">
+    <div class="glass-card rounded-3xl p-8 md:p-10 border border-emerald-500/20 relative overflow-hidden">
+        <div class="absolute -top-32 -right-32 w-96 h-96 bg-emerald-500 rounded-full opacity-10 blur-[100px]"></div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6 text-center relative z-10">
+            <div><div class="text-4xl md:text-5xl font-black text-emerald-400">500+</div><p class="text-slate-400 text-sm mt-1">Happy Farmers</p></div>
+            <div><div class="text-4xl md:text-5xl font-black text-emerald-400">24/7</div><p class="text-slate-400 text-sm mt-1">AI Support</p></div>
+            <div><div class="text-4xl md:text-5xl font-black text-emerald-400">10+</div><p class="text-slate-400 text-sm mt-1">Products Categories</p></div>
+            <div><div class="text-4xl md:text-5xl font-black text-amber-400">100%</div><p class="text-slate-400 text-sm mt-1">Trusted Platform</p></div>
+        </div>
+    </div>
+</div>
+
+<!-- TOP SELLING -->
+<div class="mb-12">
+    <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center gap-3">
+            <span class="w-1 h-8 bg-gradient-to-b from-emerald-400 to-green-600 rounded-full"></span>
+            <h2 class="text-2xl font-extrabold text-white flex items-center gap-2"><i class="fa-solid fa-fire text-orange-400 text-xl"></i> Top Selling</h2>
+        </div>
+        <a href="/store" class="text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-1.5 border border-emerald-500/30 px-3 py-1.5 rounded-lg transition">View All <i class="fa-solid fa-arrow-right"></i></a>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {% for product in products[:4] %}
+        <a href="/product/{{ product.id }}" class="glass-card rounded-2xl p-4 flex flex-col hover:border-emerald-400/50 transition duration-300 group hover:-translate-y-1 cursor-pointer">
+            <div class="w-full h-32 rounded-xl overflow-hidden mb-3 bg-slate-800">
+                {% if product.media_url %}
+                    <img src="/static/uploads/{{ product.media_url }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                {% else %}
+                    <div class="w-full h-full flex items-center justify-center text-slate-500 text-xs">No Image</div>
+                {% endif %}
+            </div>
+            <h4 class="text-white font-bold text-sm group-hover:text-emerald-300 transition">{{ product.title }}</h4>
+            <p class="text-slate-400 text-xs mt-1">₹{{ product.price }}</p>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- TESTIMONIALS -->
+<div class="mb-12">
+    <div class="flex items-center gap-3 mb-6">
+        <span class="w-1 h-8 bg-gradient-to-b from-emerald-400 to-green-600 rounded-full"></span>
+        <h2 class="text-2xl font-extrabold text-white flex items-center gap-2"><i class="fa-solid fa-quote-right text-emerald-400 text-xl"></i> Farmer Stories</h2>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="glass-card rounded-2xl p-6 border border-emerald-500/20 hover:border-emerald-400/50 transition duration-300 group">
+            <div class="flex items-center gap-1 text-amber-400 mb-3">⭐⭐⭐⭐⭐</div>
+            <p class="text-slate-300 text-sm leading-relaxed">"Yogiraj Agri-Tech ne mere khet ke liye best seeds diye. AI advisor ne sahi fertilizer suggest kiya. Bahut accha experience!"</p>
+            <div class="flex items-center gap-2 mt-4 pt-3 border-t border-emerald-900/30">
+                <div class="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 text-xs font-bold">RP</div>
+                <div><p class="text-white text-xs font-semibold">Ramdas Patel</p><p class="text-[10px] text-slate-500">Himmatnagar</p></div>
+            </div>
+        </div>
+        <div class="glass-card rounded-2xl p-6 border border-emerald-500/20 hover:border-emerald-400/50 transition duration-300 group">
+            <div class="flex items-center gap-1 text-amber-400 mb-3">⭐⭐⭐⭐⭐</div>
+            <p class="text-slate-300 text-sm leading-relaxed">"Drone rental aur mandi rates ka feature bahut helpful hai. Ab market mein kabhi cheat nahi hote!"</p>
+            <div class="flex items-center gap-2 mt-4 pt-3 border-t border-emerald-900/30">
+                <div class="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 text-xs font-bold">SP</div>
+                <div><p class="text-white text-xs font-semibold">Shailesh Prajapati</p><p class="text-[10px] text-slate-500">Idar</p></div>
+            </div>
+        </div>
+        <div class="glass-card rounded-2xl p-6 border border-emerald-500/20 hover:border-emerald-400/50 transition duration-300 group">
+            <div class="flex items-center gap-1 text-amber-400 mb-3">⭐⭐⭐⭐⭐</div>
+            <p class="text-slate-300 text-sm leading-relaxed">"Meri soil report ko AI ne analyze kar ke exact solution diya. Meri crop ki production double ho gayi!"</p>
+            <div class="flex items-center gap-2 mt-4 pt-3 border-t border-emerald-900/30">
+                <div class="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 text-xs font-bold">VN</div>
+                <div><p class="text-white text-xs font-semibold">Vaibhav Nai</p><p class="text-[10px] text-slate-500">Sabarkantha</p></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- AGRI NEWS -->
+{% if news_list %}
+<div class="mb-12">
+    <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center gap-3">
+            <span class="w-1 h-8 bg-gradient-to-b from-emerald-400 to-green-600 rounded-full"></span>
+            <h2 class="text-2xl font-extrabold text-white flex items-center gap-2"><i class="fa-solid fa-newspaper text-emerald-400 text-xl"></i> Agri News & Tips</h2>
+        </div>
+        {% if is_admin %}
+        <a href="/admin#tab-agri-news" class="text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-1.5 border border-emerald-500/30 px-3 py-1.5 rounded-lg transition"><i class="fa-solid fa-pen-to-square"></i> Add News</a>
+        {% endif %}
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {% for news in news_list[:3] %}
+        <a href="/news/{{ news.id }}" class="glass-card rounded-3xl p-6 border border-emerald-500/20 hover:border-emerald-400/50 transition duration-300 group hover:-translate-y-1 cursor-pointer">
+            <div class="w-full h-40 rounded-xl bg-slate-800 mb-3 overflow-hidden flex items-center justify-center">
+                {% if news.image_url %}
+                    <img src="/static/uploads/{{ news.image_url }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                {% else %}
+                    <span class="text-6xl group-hover:scale-110 transition duration-500">📰</span>
+                {% endif %}
+            </div>
+            <h4 class="text-white font-bold text-base group-hover:text-emerald-300 transition">{{ news.title }}</h4>
+            <p class="text-slate-400 text-xs mt-2 line-clamp-2">{{ news.content }}</p>
+            <span class="inline-block mt-3 text-xs text-emerald-400 hover:text-emerald-300 font-semibold">Read More <i class="fa-solid fa-arrow-right"></i></span>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- CTA -->
+<div class="mb-12">
+    <div class="relative rounded-3xl p-[2px] bg-gradient-to-br from-emerald-400/30 via-green-500/10 to-emerald-400/20 shadow-2xl shadow-emerald-900/10">
+        <div class="glass-card rounded-3xl p-8 md:p-10 border-0 text-center relative overflow-hidden">
+            <div class="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(16,185,129,0.08),transparent_60%)] pointer-events-none"></div>
+            <h3 class="font-display text-2xl md:text-4xl font-bold text-white mb-3">Ready to Transform Your Farm?</h3>
+            <p class="text-slate-400 text-sm max-w-2xl mx-auto mb-6">Join Yogiraj Agri-Tech today and get access to AI-driven crop advice, premium seeds, and real-time market data.</p>
+            <div class="flex flex-wrap justify-center gap-4">
+                <a href="/store" class="bg-gradient-to-r from-emerald-500 to-green-600 hover:brightness-110 text-slate-950 font-bold px-6 py-3 rounded-2xl shadow-lg shadow-emerald-500/20 transition transform hover:scale-105">🌱 Start Shopping</a>
+                <a href="/partnership" class="bg-slate-800/50 hover:bg-slate-800 text-slate-300 border border-slate-700/50 px-6 py-3 rounded-2xl transition">🤝 Partner With Us</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================ -->
+<!-- 🎬 PAGE-LEVEL SCRIPTS -->
+<!-- ============================================ -->
+<script>
+// ---------- TYPEWRITER for Dr. Krishi card ----------
+const typewriterPhrases = [
+    "Meri gehu mein peela dhabba hai...",
+    "Cotton ke liye best khad kaunsi hai?",
+    "Tomato ke patte peele ho rahe hain...",
+    "Soil report kaise samjhe?",
+    "Drip irrigation kab chalu karein?"
+];
+
+let twIndex = 0, twChar = 0, twDeleting = false;
+
+function typeWriter() {
+    const el = document.getElementById('typewriter-text');
+    if (!el) return;
+
+    const current = typewriterPhrases[twIndex];
+
+    if (!twDeleting) {
+        el.textContent = current.substring(0, twChar + 1);
+        twChar++;
+        if (twChar === current.length) {
+            twDeleting = true;
+            setTimeout(typeWriter, 2000);
+            return;
+        }
+        setTimeout(typeWriter, 55);
+    } else {
+        el.textContent = current.substring(0, twChar - 1);
+        twChar--;
+        if (twChar === 0) {
+            twDeleting = false;
+            twIndex = (twIndex + 1) % typewriterPhrases.length;
+            setTimeout(typeWriter, 400);
+            return;
+        }
+        setTimeout(typeWriter, 25);
+    }
+}
+
+// ---------- Quick Ask handlers ----------
+function quickAsk(text) {
+    const input = document.getElementById('quick-ask-input');
+    if (input) {
+        input.value = text;
+        input.focus();
+        input.classList.add('ring-2', 'ring-amber-400/60');
+        setTimeout(() => input.classList.remove('ring-2', 'ring-amber-400/60'), 600);
+    }
+}
+
+function submitQuickAsk() {
+    const input = document.getElementById('quick-ask-input');
+    const text = input?.value.trim();
+
+    if (!text) {
+        input.classList.add('animate-shake');
+        setTimeout(() => input.classList.remove('animate-shake'), 400);
+        return;
+    }
+
+    window.location.href = `/ai-advisor?q=${encodeURIComponent(text)}`;
+}
+
+// ---------- Ad tracking ----------
+function trackAdClick(adId) {
+    fetch(`/api/ad/click/${adId}`, { method: 'POST', headers: {'Content-Type': 'application/json'} })
+        .catch(err => console.log('Ad click error:', err));
+}
+function trackAdView(adId) {
+    fetch(`/api/ad/view/${adId}`, { method: 'POST', headers: {'Content-Type': 'application/json'} })
+        .catch(err => console.log('Ad view error:', err));
+}
+
+// ---------- Init on DOM ready ----------
+document.addEventListener('DOMContentLoaded', function() {
+    // Start typewriter
+    setTimeout(typeWriter, 800);
+
+    // Enter key on quick-ask
+    const qInput = document.getElementById('quick-ask-input');
+    if (qInput) {
+        qInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                submitQuickAsk();
+            }
+        });
+    }
+
+    // Track ad views
+    document.querySelectorAll('.glass-card a[onclick*="trackAdClick"]').forEach(function(el) {
+        const match = el.getAttribute('onclick').match(/\d+/);
+        if (match) { trackAdView(match[0]); }
+    });
+
+    // Media sliders (blogs)
+    document.querySelectorAll('.media-slider').forEach(slider => {
+        const track = slider.querySelector('.slider-track');
+        const slides = slider.querySelectorAll('.slider-slide');
+        const prevBtn = slider.querySelector('.slider-prev');
+        const nextBtn = slider.querySelector('.slider-next');
+        const dots = slider.querySelectorAll('.slider-dot');
+        let idx = 0;
+        const total = slides.length;
+        if (total <= 1) return;
+
+        function go(i) {
+            if (i < 0) i = total - 1;
+            if (i >= total) i = 0;
+            idx = i;
+            track.style.transform = `translateX(-${idx * 100}%)`;
+            dots.forEach((d, k) => {
+                d.classList.toggle('bg-white/70', k === idx);
+                d.classList.toggle('bg-white/30', k !== idx);
+            });
+        }
+        prevBtn?.addEventListener('click', () => go(idx - 1));
+        nextBtn?.addEventListener('click', () => go(idx + 1));
+        dots.forEach((d, k) => d.addEventListener('click', () => go(k)));
+
+        let auto = setInterval(() => go(idx + 1), 4000);
+        slider.addEventListener('mouseenter', () => clearInterval(auto));
+        slider.addEventListener('mouseleave', () => { auto = setInterval(() => go(idx + 1), 4000); });
+    });
+});
+</script>
+
+{% endblock %}

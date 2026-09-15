@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    
+    <!-- Header -->
+    <div class="text-center mb-10">
+        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-emerald-500/20 to-green-500/20 border border-emerald-500/30 text-emerald-300 text-xs font-bold uppercase tracking-wider mb-3">
+            <i class="fa-solid fa-handshake text-emerald-400"></i> Land Rental Marketplace
+        </div>
+        <h2 class="text-4xl md:text-5xl font-extrabold text-white mb-3">
+            <span class="bg-gradient-to-r from-emerald-400 via-teal-300 to-green-400 bg-clip-text text-transparent">🌾 Rent Farm Land</span>
+        </h2>
+        <p class="text-slate-400 text-base max-w-2xl mx-auto">
+            Find the perfect agricultural land for rent in Sabarkantha. Direct contact with landowners.
+        </p>
+    </div>
+
+    <!-- Quick Filters -->
+    <div class="flex flex-wrap items-center gap-3 mb-8">
+        <button onclick="filterLand('all')" class="filter-btn active px-4 py-2 rounded-xl text-sm font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 transition hover:bg-emerald-500/30">
+            🌾 All Land
+        </button>
+        <button onclick="filterLand('agriculture')" class="filter-btn px-4 py-2 rounded-xl text-sm font-semibold text-slate-400 border border-slate-700/50 hover:bg-slate-800/50 transition">
+            🌱 Agriculture
+        </button>
+        <button onclick="filterLand('commercial')" class="filter-btn px-4 py-2 rounded-xl text-sm font-semibold text-slate-400 border border-slate-700/50 hover:bg-slate-800/50 transition">
+            🏗️ Commercial
+        </button>
+        <button onclick="filterLand('organic')" class="filter-btn px-4 py-2 rounded-xl text-sm font-semibold text-slate-400 border border-slate-700/50 hover:bg-slate-800/50 transition">
+            🌿 Organic
+        </button>
+        <button onclick="filterLand('irrigated')" class="filter-btn px-4 py-2 rounded-xl text-sm font-semibold text-slate-400 border border-slate-700/50 hover:bg-slate-800/50 transition">
+            💧 Irrigated
+        </button>
+        <div class="flex-1"></div>
+        <div class="relative">
+            <input id="searchInput" onkeyup="searchLand()" type="text" placeholder="🔍 Search location..." class="bg-slate-950/80 border border-emerald-800/50 rounded-xl px-4 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-400 transition w-48 md:w-64">
+        </div>
+    </div>
+
+    <!-- Land Listings Grid -->
+    <div id="landGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for land in land_listings %}
+        <div class="land-card glass-card rounded-2xl overflow-hidden border border-emerald-500/10 hover:border-emerald-400/50 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-emerald-500/10" data-type="{{ land.land_type|lower }}" data-search="{{ land.location }} {{ land.title }}">
+            
+            <!-- Image/Media Slider -->
+            <div class="relative h-52 overflow-hidden bg-slate-900">
+                {% if land.media_items %}
+                <div class="media-slider relative w-full h-full">
+                    <div class="slider-track flex transition-transform duration-500 ease-in-out h-full">
+                        {% for item in land.media_items %}
+                        <div class="slider-slide min-w-full h-full flex items-center justify-center bg-slate-800">
+                            {% if item.type == 'youtube' %}
+                                <iframe src="{{ item.url }}" class="w-full h-full" frameborder="0" allowfullscreen></iframe>
+                            {% elif item.type == 'video' %}
+                                <video src="{{ item.url }}" controls class="w-full h-full object-cover"></video>
+                            {% else %}
+                                <img src="{{ item.url }}" class="w-full h-full object-cover" alt="{{ land.title }}">
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% if land.media_items|length > 1 %}
+                    <button class="slider-prev absolute left-2 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white w-8 h-8 rounded-full flex items-center justify-center transition text-sm z-10">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </button>
+                    <button class="slider-next absolute right-2 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white w-8 h-8 rounded-full flex items-center justify-center transition text-sm z-10">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                    <div class="slider-dots absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+                        {% for item in land.media_items %}
+                        <span class="slider-dot w-2 h-2 rounded-full bg-white/30 cursor-pointer transition {% if loop.first %}bg-white/70{% endif %}" data-index="{{ loop.index0 }}"></span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                {% else %}
+                <div class="w-full h-full flex items-center justify-center text-slate-500 bg-slate-800">
+                    <div class="text-center">
+                        <div class="text-5xl mb-2">🌾</div>
+                        <p class="text-xs">No Image</p>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- Status Badge -->
+                <div class="absolute top-3 left-3 bg-emerald-500/90 text-slate-950 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1.5 shadow-lg">
+                    <span class="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></span>
+                    {{ land.status }}
+                </div>
+                
+                <!-- Price Badge -->
+                <div class="absolute bottom-3 right-3 bg-black/70 backdrop-blur-sm text-white px-4 py-2 rounded-xl border border-emerald-500/20">
+                    <span class="text-lg font-bold text-emerald-400">₹{{ land.price }}</span>
+                    <span class="text-xs text-slate-400">/ {{ land.price_unit }}</span>
+                </div>
+            </div>
+            
+            <!-- Content -->
+            <div class="p-5">
+                <div class="flex items-start justify-between mb-2">
+                    <h3 class="text-lg font-bold text-white hover:text-emerald-400 transition group-hover:text-emerald-400">{{ land.title }}</h3>
+                    <span class="text-xs text-slate-500">{{ land.area_size }} {{ land.area_unit }}</span>
+                </div>
+                
+                <div class="flex items-center gap-1.5 text-slate-400 text-sm mb-3">
+                    <i class="fa-solid fa-location-dot text-emerald-400 text-xs"></i>
+                    <span>{{ land.location }}</span>
+                </div>
+                
+                <div class="flex flex-wrap gap-2 mb-3">
+                    {% if land.land_type %}
+                    <span class="text-[10px] bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 px-2.5 py-1 rounded-full">{{ land.land_type }}</span>
+                    {% endif %}
+                    {% if land.soil_type %}
+                    <span class="text-[10px] bg-amber-500/10 text-amber-300 border border-amber-500/20 px-2.5 py-1 rounded-full">🧪 {{ land.soil_type }}</span>
+                    {% endif %}
+                    {% if land.water_availability %}
+                    <span class="text-[10px] bg-blue-500/10 text-blue-300 border border-blue-500/20 px-2.5 py-1 rounded-full">💧 {{ land.water_availability }}</span>
+                    {% endif %}
+                </div>
+                
+                <p class="text-slate-400 text-sm line-clamp-2 mb-4">{{ land.description }}</p>
+                
+                <div class="flex items-center gap-4 pt-4 border-t border-emerald-900/20">
+                    <div class="flex items-center gap-1.5 text-xs text-slate-500">
+                        <i class="fa-regular fa-user text-emerald-400"></i>
+                        <span>{{ land.contact_name or 'Land Owner' }}</span>
+                    </div>
+                    <div class="flex-1"></div>
+                    <a href="https://wa.me/{{ admin_phone }}?text=Hello%20Yogiraj%20Agri-Tech%2C%20I%20am%20interested%20in%20renting%20the%20land%3A%20{{ land.title|urlencode }}%20at%20{{ land.location|urlencode }}" target="_blank" class="flex items-center gap-1.5 bg-green-600 hover:bg-green-500 text-white text-xs font-bold px-4 py-2 rounded-xl transition shadow-lg shadow-green-600/20">
+                        <i class="fa-brands fa-whatsapp"></i>
+                        <span>Contact</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-span-3 text-center py-16">
+            <div class="text-6xl mb-4">🌾</div>
+            <p class="text-slate-400 text-lg">No land available for rent at the moment.</p>
+            <p class="text-slate-500 text-sm mt-1">Check back soon for new listings.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+// Media Slider
+document.querySelectorAll('.media-slider').forEach(slider => {
+    const track = slider.querySelector('.slider-track');
+    const slides = slider.querySelectorAll('.slider-slide');
+    const prevBtn = slider.querySelector('.slider-prev');
+    const nextBtn = slider.querySelector('.slider-next');
+    const dots = slider.querySelectorAll('.slider-dot');
+    let currentIndex = 0;
+    const totalSlides = slides.length;
+
+    if (totalSlides <= 1) return;
+
+    function goToSlide(index) {
+        if (index < 0) index = totalSlides - 1;
+        if (index >= totalSlides) index = 0;
+        currentIndex = index;
+        track.style.transform = `translateX(-${currentIndex * 100}%)`;
+        dots.forEach((dot, i) => {
+            dot.classList.toggle('bg-white/70', i === currentIndex);
+            dot.classList.toggle('bg-white/30', i !== currentIndex);
+        });
+    }
+
+    if (prevBtn) prevBtn.addEventListener('click', () => goToSlide(currentIndex - 1));
+    if (nextBtn) nextBtn.addEventListener('click', () => goToSlide(currentIndex + 1));
+    dots.forEach((dot, i) => dot.addEventListener('click', () => goToSlide(i)));
+
+    let autoplayInterval = setInterval(() => goToSlide(currentIndex + 1), 4000);
+    slider.addEventListener('mouseenter', () => clearInterval(autoplayInterval));
+    slider.addEventListener('mouseleave', () => {
+        autoplayInterval = setInterval(() => goToSlide(currentIndex + 1), 4000);
+    });
+});
+
+// Filter by type
+function filterLand(type) {
+    document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active', 'bg-emerald-500/20', 'text-emerald-300', 'border-emerald-500/30'));
+    document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.add('text-slate-400', 'border-slate-700/50'));
+    
+    const cards = document.querySelectorAll('.land-card');
+    cards.forEach(card => {
+        if (type === 'all') {
+            card.style.display = 'block';
+        } else {
+            const cardType = card.dataset.type;
+            if (cardType && cardType.toLowerCase().includes(type.toLowerCase())) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        }
+    });
+    
+    const activeBtn = document.querySelector(`.filter-btn[onclick*="${type}"]`);
+    if (activeBtn) {
+        activeBtn.classList.add('active', 'bg-emerald-500/20', 'text-emerald-300', 'border-emerald-500/30');
+        activeBtn.classList.remove('text-slate-400', 'border-slate-700/50');
+    }
+}
+
+// Search by location/title
+function searchLand() {
+    const query = document.getElementById('searchInput').value.toLowerCase();
+    const cards = document.querySelectorAll('.land-card');
+    cards.forEach(card => {
+        const searchText = card.dataset.search.toLowerCase();
+        if (searchText.includes(query)) {
+            card.style.display = 'block';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+}
+</script>
+{% endblock %}

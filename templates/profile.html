@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="glass-card rounded-3xl p-8 border border-emerald-500/20">
+        <div class="flex items-center gap-4 mb-6">
+            <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-emerald-500 to-green-400 flex items-center justify-center text-slate-950 font-black text-2xl shadow-lg shadow-emerald-500/20">
+                {{ admin.full_name[0] if admin and admin.full_name else 'A' }}
+            </div>
+            <div>
+                <h2 class="text-2xl font-bold text-white">Profile Settings</h2>
+                <p class="text-slate-400 text-sm">Manage your account details</p>
+            </div>
+        </div>
+
+        <form method="POST" action="/admin/profile" class="space-y-4">
+            <div>
+                <label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Full Name</label>
+                <input type="text" name="full_name" value="{{ admin.full_name if admin else '' }}" 
+                       class="input-field" placeholder="Your full name">
+            </div>
+            <div>
+                <label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Email</label>
+                <input type="email" name="email" value="{{ admin.email if admin else '' }}" 
+                       class="input-field" placeholder="admin@example.com">
+            </div>
+            <div>
+                <label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Username</label>
+                <input type="text" value="{{ admin.username if admin else '' }}" 
+                       class="input-field" disabled readonly>
+                <p class="text-xs text-slate-500 mt-1">Username cannot be changed</p>
+            </div>
+            <div class="border-t border-emerald-900/30 pt-4">
+                <label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">New Password</label>
+                <input type="password" name="new_password" class="input-field" placeholder="Leave blank to keep current">
+                <p class="text-xs text-slate-500 mt-1">Minimum 6 characters</p>
+            </div>
+            <button type="submit" class="btn-primary w-full flex items-center justify-center gap-2">
+                <i class="fa-solid fa-save"></i> Save Changes
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+

@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+
+    <!-- Back Button -->
+    <div class="mb-6">
+        <a href="/store" class="inline-flex items-center gap-2 text-slate-400 hover:text-emerald-300 transition text-sm">
+            <i class="fa-solid fa-arrow-left"></i> Back to Store
+        </a>
+    </div>
+
+    <div class="glass-card rounded-3xl p-6 md:p-10 border border-emerald-500/20 overflow-hidden relative">
+        <div class="absolute -top-32 -right-32 w-96 h-96 bg-emerald-500 rounded-full opacity-10 blur-[100px] pointer-events-none"></div>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 relative z-10">
+            
+            <!-- LEFT: Media Gallery (Images & Videos) -->
+            <div class="space-y-4">
+                <!-- Main Display -->
+                <div id="mainMediaDisplay" class="glass-card p-4 rounded-2xl border border-emerald-500/20 h-96 flex items-center justify-center overflow-hidden bg-slate-900/50">
+                    {% if media_items and media_items|length > 0 %}
+                        {% with first = media_items[0] %}
+                            {% if first.media_type == 'video' %}
+                                <video src="/static/uploads/{{ first.media_url }}" controls class="w-full h-full object-contain rounded-xl"></video>
+                            {% elif first.youtube_url %}
+                                <iframe src="{{ first.youtube_url }}" class="w-full h-full rounded-xl" frameborder="0" allowfullscreen></iframe>
+                            {% else %}
+                                <img src="/static/uploads/{{ first.media_url }}" class="w-full h-full object-contain rounded-xl" id="mainImage">
+                            {% endif %}
+                        {% endwith %}
+                    {% else %}
+                        <div class="text-slate-500 text-center">
+                            <div class="text-6xl mb-3">🌾</div>
+                            <p>No Media Available</p>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Thumbnail Gallery -->
+                {% if media_items and media_items|length > 1 %}
+                <div class="flex gap-3 overflow-x-auto pb-2 custom-scroll">
+                    {% for item in media_items %}
+                    <div onclick="changeMedia(this)" class="glass-card w-20 h-20 rounded-xl border border-emerald-500/20 hover:border-emerald-400 cursor-pointer flex items-center justify-center overflow-hidden shrink-0 transition duration-200" data-url="/static/uploads/{{ item.media_url }}" data-type="{{ item.media_type }}" data-youtube="{{ item.youtube_url }}">
+                        {% if item.media_type == 'video' %}
+                            <video src="/static/uploads/{{ item.media_url }}" class="w-full h-full object-cover"></video>
+                            <div class="absolute inset-0 bg-black/40 flex items-center justify-center text-white"><i class="fa-solid fa-play"></i></div>
+                        {% elif item.youtube_url %}
+                            <img src="https://img.youtube.com/vi/{{ item.youtube_url.split('/')[-1].split('?')[0] }}/mqdefault.jpg" class="w-full h-full object-cover">
+                        {% else %}
+                            <img src="/static/uploads/{{ item.media_url }}" class="w-full h-full object-cover">
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- RIGHT: Product Details -->
+            <div class="space-y-6">
+                <div>
+                    <span class="text-xs font-bold text-emerald-400 bg-emerald-950/80 border border-emerald-500/30 px-2.5 py-1 rounded-md">{{ product.category }}</span>
+                    <h1 class="text-3xl md:text-4xl font-extrabold text-white mt-2">{{ product.title }}</h1>
+                    <div class="flex items-center gap-4 mt-2">
+                        <span class="text-3xl font-black text-emerald-400">₹{{ product.price }}</span>
+                        {% if product.stock_qty > 0 %}
+                            <span class="text-xs text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/30">In Stock ({{ product.stock_qty }})</span>
+                        {% else %}
+                            <span class="text-xs text-rose-400 bg-rose-500/10 px-3 py-1 rounded-full border border-rose-500/30">Out of Stock</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="h-px bg-gradient-to-r from-transparent via-emerald-500/30 to-transparent"></div>
+
+                <div>
+                    <h3 class="text-sm font-semibold text-slate-300 mb-2">Product Description</h3>
+                    <p class="text-slate-400 text-sm leading-relaxed">{{ product.description or 'No description provided.' }}</p>
+                </div>
+
+                {% if product.extra_info %}
+                <div>
+                    <h3 class="text-sm font-semibold text-slate-300 mb-2">Additional Information</h3>
+                    <p class="text-slate-400 text-sm">{{ product.extra_info }}</p>
+                </div>
+                {% endif %}
+
+                {% if product.youtube_url %}
+                <div>
+                    <h3 class="text-sm font-semibold text-slate-300 mb-2">Video Preview</h3>
+                    <div class="aspect-video w-full rounded-xl overflow-hidden border border-emerald-500/20">
+                        <iframe src="{{ product.youtube_url }}" class="w-full h-full" frameborder="0" allowfullscreen></iframe>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="h-px bg-gradient-to-r from-transparent via-emerald-500/30 to-transparent"></div>
+
+                <!-- Buy Action -->
+                <div class="pt-2">
+                    <a href="https://wa.me/{{ admin_phone }}?text=Hello%20Yogiraj%20Agri-Tech,%20I%20want%20to%20buy%20{{ product.title|urlencode }}%20(₹{{ product.price }})" target="_blank" class="w-full bg-gradient-to-r from-emerald-500 to-green-600 hover:brightness-110 text-slate-950 font-bold py-4 rounded-2xl shadow-lg shadow-emerald-500/20 transition flex items-center justify-center gap-3 text-lg">
+                        <i class="fa-brands fa-whatsapp text-2xl"></i>
+                        Buy Now via WhatsApp
+                    </a>
+                    <p class="text-center text-[10px] text-slate-500 mt-2">Direct order via WhatsApp. We'll respond within minutes.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+function changeMedia(element) {
+    const mainDisplay = document.getElementById('mainMediaDisplay');
+    const url = element.dataset.url;
+    const type = element.dataset.type;
+    const youtube = element.dataset.youtube;
+
+    let html = '';
+    if (type === 'video') {
+        html = `<video src="${url}" controls class="w-full h-full object-contain rounded-xl"></video>`;
+    } else if (youtube) {
+        html = `<iframe src="${youtube}" class="w-full h-full rounded-xl" frameborder="0" allowfullscreen></iframe>`;
+    } else {
+        html = `<img src="${url}" class="w-full h-full object-contain rounded-xl" id="mainImage">`;
+    }
+    mainDisplay.innerHTML = html;
+}
+</script>
+
+<style>
+.custom-scroll::-webkit-scrollbar { height: 4px; }
+.custom-scroll::-webkit-scrollbar-thumb { background: #2e7d32; border-radius: 10px; }
+</style>
+{% endblock %}

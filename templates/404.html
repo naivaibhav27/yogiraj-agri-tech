@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto text-center py-20">
+
+    <!-- Premium 404 Glow -->
+    <div class="relative">
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[200px] bg-amber-500/20 blur-[80px] pointer-events-none -z-10"></div>
+        
+        <div class="text-9xl font-display font-bold text-white mb-4 drop-shadow-[0_0_30px_rgba(251,191,36,0.2)]">
+            4<span class="text-amber-400">0</span>4
+        </div>
+        
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-bold uppercase tracking-wider mb-4">
+            <i class="fa-solid fa-compass"></i> Oops! Lost in the Fields
+        </div>
+        
+        <h2 class="font-display text-3xl md:text-4xl font-bold text-white mb-4">
+            Page Not Found <span class="text-slate-400">🌾</span>
+        </h2>
+        
+        <p class="text-slate-400 text-base max-w-lg mx-auto mb-8">
+            The page you are looking for doesn't exist or has been moved. 
+            Don't worry, we'll get you back to the farm in no time!
+        </p>
+        
+        <div class="flex flex-wrap justify-center gap-4">
+            <a href="/" class="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-green-600 hover:brightness-110 text-slate-950 font-bold px-6 py-3 rounded-2xl shadow-lg shadow-emerald-500/20 transition transform hover:scale-105">
+                <i class="fa-solid fa-house"></i> Back to Home
+            </a>
+            <a href="/store" class="inline-flex items-center gap-2 bg-slate-800/50 hover:bg-slate-800 text-slate-300 border border-slate-700/50 px-6 py-3 rounded-2xl transition">
+                <i class="fa-solid fa-store"></i> Browse Store
+            </a>
+        </div>
+        
+        <div class="mt-8 text-4xl">🌾</div>
+    </div>
+
+</div>
+{% endblock %}

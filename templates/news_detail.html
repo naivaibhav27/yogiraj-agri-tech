@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+
+    <!-- Back Button -->
+    <div class="mb-6">
+        <a href="/" class="inline-flex items-center gap-2 text-slate-400 hover:text-emerald-300 transition text-sm">
+            <i class="fa-solid fa-arrow-left"></i> Back to Home
+        </a>
+    </div>
+
+    <!-- News Detail Card -->
+    <div class="glass-card rounded-3xl p-6 md:p-10 border border-emerald-500/20 overflow-hidden relative">
+        <div class="absolute -top-32 -right-32 w-96 h-96 bg-emerald-500 rounded-full opacity-10 blur-[100px] pointer-events-none"></div>
+        
+        <div class="relative z-10">
+            <!-- Image -->
+            {% if news.image_url %}
+            <div class="w-full h-64 md:h-80 rounded-2xl overflow-hidden mb-6 bg-slate-800">
+                <img src="/static/uploads/{{ news.image_url }}" class="w-full h-full object-cover">
+            </div>
+            {% else %}
+            <div class="w-full h-64 md:h-80 rounded-2xl bg-slate-800 mb-6 flex items-center justify-center text-6xl text-slate-600">
+                📰
+            </div>
+            {% endif %}
+
+            <!-- Title -->
+            <h1 class="text-3xl md:text-4xl font-extrabold text-white mb-4">{{ news.title }}</h1>
+
+            <!-- Content -->
+            <div class="text-slate-300 text-base leading-relaxed whitespace-pre-line">
+                {{ news.content }}
+            </div>
+
+            <!-- External Link -->
+            {% if news.link_url %}
+            <div class="mt-6 pt-6 border-t border-emerald-900/30">
+                <a href="{{ news.link_url }}" target="_blank" class="inline-flex items-center gap-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 px-4 py-2 rounded-xl transition">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i> Learn More
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}

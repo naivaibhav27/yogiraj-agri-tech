@@ -1,0 +1,364 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto">
+
+    <!-- Header -->
+    <div class="text-center mb-10">
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-semibold uppercase tracking-wider mb-4">
+            <i class="fa-solid fa-robot"></i> Powered by GroqCloud AI
+        </div>
+        <h2 class="font-display text-4xl md:text-5xl font-semibold text-white mb-3">
+            <span class="bg-gradient-to-r from-emerald-300 via-emerald-400 to-teal-300 bg-clip-text text-transparent">🌾 AI Crop Doctor</span>
+        </h2>
+        <p class="text-slate-400 text-base max-w-2xl mx-auto">
+            Instant expert advice on crop diseases, pests, fertilizers and more — talk to Dr. Krishi anytime
+        </p>
+    </div>
+
+    <!-- Main Card -->
+    <div class="relative rounded-3xl p-[1px] bg-gradient-to-br from-emerald-400/30 via-emerald-500/10 to-amber-400/20 shadow-2xl shadow-emerald-500/5">
+    <div class="glass-card rounded-3xl p-6 md:p-8 border-0">
+
+        <!-- Dr. Krishi identity strip — the signature element for this page -->
+        <div class="flex items-center gap-4 mb-7 pb-6 border-b border-emerald-900/30">
+            <div class="relative w-14 h-14 shrink-0">
+                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-slate-950 text-2xl shadow-lg shadow-emerald-500/25">
+                    <i class="fa-solid fa-user-doctor"></i>
+                </div>
+                <span class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-emerald-400 border-2 border-[#0d1c12] shadow-[0_0_8px_rgba(52,211,153,0.8)] animate-pulse"></span>
+            </div>
+            <div>
+                <p class="font-display text-lg font-semibold text-white">Dr. Krishi</p>
+                <p class="text-xs text-emerald-400 font-medium">AI Agronomist · Online now</p>
+            </div>
+        </div>
+
+        <!-- Quick Questions -->
+        <div class="mb-6">
+            <p class="text-xs text-slate-400 mb-3 uppercase tracking-wider font-semibold flex items-center gap-1.5">
+                <i class="fa-solid fa-bolt text-amber-300"></i> Quick Questions
+            </p>
+            <div class="flex flex-wrap gap-2">
+                <button onclick="setQuestion('My wheat has yellow spots on leaves. What is the problem and how to fix it?')"
+                    class="text-xs bg-slate-800/60 hover:bg-emerald-500/20 text-slate-300 hover:text-emerald-300 px-4 py-2 rounded-full border border-slate-700/50 hover:border-emerald-400/40 transition duration-200">
+                    🌾 Wheat Disease
+                </button>
+                <button onclick="setQuestion('Best fertilizer for cotton crop in Gujarat soil? Give specific NPK ratio.')"
+                    class="text-xs bg-slate-800/60 hover:bg-emerald-500/20 text-slate-300 hover:text-emerald-300 px-4 py-2 rounded-full border border-slate-700/50 hover:border-emerald-400/40 transition duration-200">
+                    🌿 Cotton Fertilizer
+                </button>
+                <button onclick="setQuestion('How to control aphids on tomato plants naturally?')"
+                    class="text-xs bg-slate-800/60 hover:bg-emerald-500/20 text-slate-300 hover:text-emerald-300 px-4 py-2 rounded-full border border-slate-700/50 hover:border-emerald-400/40 transition duration-200">
+                    🍅 Pest Control
+                </button>
+                <button onclick="setQuestion('What is the best sowing time for wheat in Gujarat and what seed varieties are recommended?')"
+                    class="text-xs bg-slate-800/60 hover:bg-emerald-500/20 text-slate-300 hover:text-emerald-300 px-4 py-2 rounded-full border border-slate-700/50 hover:border-emerald-400/40 transition duration-200">
+                    📅 Sowing Guide
+                </button>
+                <button onclick="setQuestion('My soil pH is 5.5. What should I add to improve it?')"
+                    class="text-xs bg-slate-800/60 hover:bg-emerald-500/20 text-slate-300 hover:text-emerald-300 px-4 py-2 rounded-full border border-slate-700/50 hover:border-emerald-400/40 transition duration-200">
+                    🧪 Soil Health
+                </button>
+            </div>
+        </div>
+
+        <!-- Input Area -->
+        <div class="space-y-4">
+            <label class="text-sm text-slate-300 font-medium">Describe your crop problem in detail</label>
+
+            <textarea id="question" rows="4"
+                class="w-full bg-slate-950/80 border border-emerald-800/50 rounded-2xl p-5 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/10 transition resize-none"
+                placeholder="Example: My wheat crop is showing yellow spots on leaves with brown edges. The problem started about a week ago after rain. What should I do?"></textarea>
+
+            <div class="flex gap-3">
+                <button onclick="askAI()" id="ask-btn"
+                    class="flex-1 py-3.5 bg-gradient-to-r from-emerald-500 to-green-600 hover:brightness-110 text-slate-950 font-bold rounded-xl shadow-lg shadow-emerald-500/20 transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-sparkles"></i>
+                    <span>Get AI Advice</span>
+                </button>
+                <button onclick="clearChat()"
+                    class="px-5 py-3.5 bg-slate-800/50 hover:bg-slate-800 text-slate-400 hover:text-white rounded-xl border border-slate-700/50 transition">
+                    <i class="fa-solid fa-eraser"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Loading -->
+        <div id="loading" class="hidden mt-6 text-center py-8">
+            <div class="inline-block">
+                <div class="relative w-14 h-14 mx-auto">
+                    <div class="w-14 h-14 border-4 border-emerald-500/20 border-t-emerald-400 rounded-full animate-spin"></div>
+                    <i class="fa-solid fa-seedling text-emerald-400 text-sm absolute inset-0 flex items-center justify-center"></i>
+                </div>
+                <p class="text-slate-300 text-sm mt-4 font-medium">Dr. Krishi is analyzing your crop...</p>
+                <p class="text-slate-500 text-xs mt-1">This may take a few seconds</p>
+            </div>
+        </div>
+
+        <!-- Response -->
+        <div id="response-area" class="hidden mt-6">
+            <div class="bg-slate-950/60 border border-emerald-500/20 rounded-2xl p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 text-lg">
+                            <i class="fa-solid fa-robot"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-emerald-400 font-display font-semibold text-sm">Dr. Krishi</h3>
+                            <p class="text-slate-500 text-xs">AI Agronomist</p>
+                        </div>
+                    </div>
+                    <span id="timestamp" class="text-xs text-slate-500 bg-slate-800/50 px-3 py-1 rounded-full font-mono"></span>
+                </div>
+
+                <div id="ai-response" class="text-slate-200 text-sm leading-relaxed whitespace-pre-line">
+                    <!-- Response appears here -->
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="flex flex-wrap gap-3 mt-6 pt-6 border-t border-emerald-900/30">
+                    <a id="whatsapp-link" href="#" target="_blank"
+                        class="inline-flex items-center gap-2 bg-green-600 hover:bg-green-500 text-white font-semibold px-5 py-2.5 rounded-xl transition text-sm">
+                        <i class="fa-brands fa-whatsapp text-lg"></i>
+                        <span>Consult Expert</span>
+                    </a>
+                    <button onclick="copyResponse()"
+                        class="inline-flex items-center gap-2 bg-slate-700/50 hover:bg-slate-700 text-slate-300 font-semibold px-5 py-2.5 rounded-xl transition text-sm">
+                        <i class="fa-regular fa-copy"></i>
+                        <span>Copy Advice</span>
+                    </button>
+                    <button onclick="askFollowUp()"
+                        class="inline-flex items-center gap-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 font-semibold px-5 py-2.5 rounded-xl transition text-sm border border-emerald-500/20">
+                        <i class="fa-regular fa-comment"></i>
+                        <span>Ask Follow-up</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Error -->
+        <div id="error-area" class="hidden mt-6">
+            <div class="bg-rose-950/40 border border-rose-500/30 rounded-2xl p-8 text-center">
+                <div class="text-rose-400 text-5xl mb-4">⚠️</div>
+                <h4 class="text-rose-300 font-display font-semibold text-lg mb-2">Something went wrong</h4>
+                <p class="text-rose-300/70 text-sm max-w-md mx-auto" id="error-message">We couldn't connect to the AI service. Please try again.</p>
+                <button onclick="retryAI()" class="mt-5 px-8 py-3 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 rounded-xl text-sm font-semibold transition inline-flex items-center gap-2">
+                    <i class="fa-solid fa-rotate-right"></i>
+                    <span>Try Again</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Tips Footer -->
+        <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div class="flex items-center gap-3 bg-slate-800/30 rounded-xl px-4 py-3">
+                <span class="text-xl">🌱</span>
+                <span class="text-xs text-slate-400">Crop Diseases & Pests</span>
+            </div>
+            <div class="flex items-center gap-3 bg-slate-800/30 rounded-xl px-4 py-3">
+                <span class="text-xl">🧪</span>
+                <span class="text-xs text-slate-400">Fertilizer & Soil Health</span>
+            </div>
+            <div class="flex items-center gap-3 bg-slate-800/30 rounded-xl px-4 py-3">
+                <span class="text-xl">📦</span>
+                <span class="text-xs text-slate-400">Product Recommendations</span>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+        <div class="glass-card p-5 rounded-2xl border border-emerald-500/10 hover:border-amber-400/30 transition">
+            <p class="font-display text-3xl font-semibold text-emerald-400">24/7</p>
+            <p class="text-xs text-slate-400 mt-1">AI Availability</p>
+        </div>
+        <div class="glass-card p-5 rounded-2xl border border-emerald-500/10 hover:border-amber-400/30 transition">
+            <p class="font-display text-3xl font-semibold text-emerald-400">3s</p>
+            <p class="text-xs text-slate-400 mt-1">Avg Response Time</p>
+        </div>
+        <div class="glass-card p-5 rounded-2xl border border-emerald-500/10 hover:border-amber-400/30 transition">
+            <p class="font-display text-3xl font-semibold text-emerald-400">100%</p>
+            <p class="text-xs text-slate-400 mt-1">Free for Farmers</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    let lastResponse = '';
+    let conversationHistory = [];
+
+    function setQuestion(text) {
+        document.getElementById('question').value = text;
+        document.getElementById('question').focus();
+        document.getElementById('question').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    async function askAI() {
+        const question = document.getElementById('question').value.trim();
+
+        if (!question) {
+            alert('Please describe your crop problem first.');
+            return;
+        }
+
+        document.getElementById('loading').classList.remove('hidden');
+        document.getElementById('response-area').classList.add('hidden');
+        document.getElementById('error-area').classList.add('hidden');
+
+        const btn = document.getElementById('ask-btn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Analyzing...';
+
+        try {
+            const response = await fetch('/api/ai_consult', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    prompt: question,
+                    history: conversationHistory
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.success !== false) {
+                lastResponse = data.reply;
+
+                conversationHistory.push(
+                    { role: "user", content: question },
+                    { role: "assistant", content: data.reply }
+                );
+
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('response-area').classList.remove('hidden');
+
+                document.getElementById('timestamp').textContent = data.timestamp || new Date().toLocaleTimeString();
+
+                const formattedResponse = formatResponse(data.reply);
+                document.getElementById('ai-response').innerHTML = formattedResponse;
+
+                const phone = '{{ admin_phone }}';
+                const message = `🌾 Crop Problem:\n${question}\n\n🤖 AI Advice:\n${data.reply}`;
+                document.getElementById('whatsapp-link').href = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+
+                document.getElementById('response-area').scrollIntoView({ behavior: 'smooth' });
+
+            } else {
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('error-area').classList.remove('hidden');
+                document.getElementById('error-message').textContent = data.error || 'Something went wrong. Please try again.';
+            }
+
+        } catch (error) {
+            console.error('Error:', error);
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('error-area').classList.remove('hidden');
+            document.getElementById('error-message').textContent = 'Network error. Please check your connection and try again.';
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-sparkles"></i><span>Get AI Advice</span>';
+        }
+    }
+
+    function formatResponse(text) {
+        let formatted = text
+            .replace(/\*\*(.*?)\*\*/g, '<strong class="text-emerald-300">$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em class="text-slate-300">$1</em>')
+            .replace(/\n\n/g, '<br><br>')
+            .replace(/\n/g, '<br>')
+            .replace(/•/g, '<span class="text-emerald-400">•</span>')
+            .replace(/---/g, '<hr class="border-emerald-500/20 my-3">');
+        return formatted;
+    }
+
+    function copyResponse() {
+        if (lastResponse) {
+            navigator.clipboard.writeText(lastResponse).then(() => {
+                showToast('✅ Advice copied to clipboard!');
+            }).catch(() => {
+                const textarea = document.createElement('textarea');
+                textarea.value = lastResponse;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                showToast('✅ Advice copied to clipboard!');
+            });
+        }
+    }
+
+    function askFollowUp() {
+        const followUp = prompt('What would you like to ask about the previous advice?');
+        if (followUp) {
+            document.getElementById('question').value = followUp;
+            askAI();
+        }
+    }
+
+    function retryAI() {
+        document.getElementById('error-area').classList.add('hidden');
+        askAI();
+    }
+
+    function clearChat() {
+        document.getElementById('question').value = '';
+        document.getElementById('response-area').classList.add('hidden');
+        document.getElementById('error-area').classList.add('hidden');
+        conversationHistory = [];
+        lastResponse = '';
+        document.getElementById('question').focus();
+        showToast('🧹 Conversation cleared');
+    }
+
+    function showToast(message) {
+        const toast = document.createElement('div');
+        toast.className = 'fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-6 py-3 rounded-xl text-sm font-medium shadow-2xl border border-emerald-500/30 z-50 transition-all duration-300';
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateY(20px)';
+            setTimeout(() => toast.remove(), 300);
+        }, 2500);
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const textarea = document.getElementById('question');
+        textarea.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                askAI();
+            }
+        });
+
+        textarea.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 150) + 'px';
+        });
+    });
+</script>
+
+<script>
+// ============================================
+// 🎯 Auto-fill from URL query (?q=...)
+// ============================================
+document.addEventListener('DOMContentLoaded', function() {
+    const params = new URLSearchParams(window.location.search);
+    const q = params.get('q');
+    if (q) {
+        const textarea = document.getElementById('question');
+        if (textarea) {
+            textarea.value = q;
+            textarea.focus();
+            // Auto-trigger AI after slight delay for smooth UX
+            setTimeout(() => {
+                if (typeof askAI === 'function') askAI();
+            }, 700);
+        }
+    }
+});
+</script>
+
+{% endblock %}

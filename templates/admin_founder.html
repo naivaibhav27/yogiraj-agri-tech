@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin - Founder Details</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white">
+    <div class="max-w-4xl mx-auto p-8">
+        <h1 class="text-3xl font-bold mb-6 flex items-center gap-3">
+            <i class="fa-solid fa-crown text-emerald-400"></i> Founder Details
+        </h1>
+        
+        <!-- ✅ Success/Error Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="mb-4 p-4 rounded-lg {% if category == 'success' %}bg-emerald-500/20 border border-emerald-500/50 text-emerald-300{% else %}bg-red-500/20 border border-red-500/50 text-red-300{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <form method="POST" enctype="multipart/form-data" class="bg-gray-800 p-6 rounded-xl border border-gray-700">
+            <div class="space-y-4">
+                <!-- Name -->
+                <div>
+                    <label class="block text-sm font-medium mb-1 text-gray-300">
+                        <i class="fa-regular fa-user text-emerald-400"></i> Name
+                    </label>
+                    <input type="text" name="name" value="{{ founder.name if founder else '' }}" 
+                           class="w-full bg-gray-700 border border-gray-600 rounded-lg p-3 text-white focus:border-emerald-500 focus:outline-none">
+                </div>
+                
+                <!-- Role -->
+                <div>
+                    <label class="block text-sm font-medium mb-1 text-gray-300">
+                        <i class="fa-regular fa-briefcase text-emerald-400"></i> Role
+                    </label>
+                    <input type="text" name="role" value="{{ founder.role if founder else '' }}" 
+                           class="w-full bg-gray-700 border border-gray-600 rounded-lg p-3 text-white focus:border-emerald-500 focus:outline-none">
+                </div>
+                
+                <!-- Bio -->
+                <div>
+                    <label class="block text-sm font-medium mb-1 text-gray-300">
+                        <i class="fa-regular fa-file-lines text-emerald-400"></i> Bio
+                    </label>
+                    <textarea name="bio" rows="4" class="w-full bg-gray-700 border border-gray-600 rounded-lg p-3 text-white focus:border-emerald-500 focus:outline-none">{{ founder.bio if founder else '' }}</textarea>
+                </div>
+                
+                <!-- Quote -->
+                <div>
+                    <label class="block text-sm font-medium mb-1 text-gray-300">
+                        <i class="fa-regular fa-quote-right text-emerald-400"></i> Quote
+                    </label>
+                    <input type="text" name="quote" value="{{ founder.quote if founder else '' }}" 
+                           class="w-full bg-gray-700 border border-gray-600 rounded-lg p-3 text-white focus:border-emerald-500 focus:outline-none">
+                </div>
+                
+                <!-- Current Image Display -->
+                <div class="bg-gray-700/50 p-4 rounded-lg">
+                    <label class="block text-sm font-medium mb-2 text-gray-300">
+                        <i class="fa-regular fa-image text-emerald-400"></i> Current Image
+                    </label>
+                    {% if founder and founder.image_url %}
+                        <div class="flex items-center gap-4">
+                            <img src="{{ url_for('static', filename='uploads/' + founder.image_url) }}" 
+                                 class="w-32 h-32 object-cover rounded-xl border-2 border-emerald-500/50">
+                            <div>
+                                <p class="text-sm text-gray-400">{{ founder.image_url }}</p>
+                                <p class="text-xs text-emerald-400 mt-1">
+                                    <i class="fa-regular fa-check-circle"></i> Image uploaded
+                                </p>
+                            </div>
+                        </div>
+                    {% else %}
+                        <p class="text-sm text-gray-500 flex items-center gap-2">
+                            <i class="fa-regular fa-circle-xmark text-red-400"></i> No image uploaded
+                        </p>
+                    {% endif %}
+                </div>
+                
+                <!-- Upload New Image -->
+                <div>
+                    <label class="block text-sm font-medium mb-1 text-gray-300">
+                        <i class="fa-regular fa-upload text-emerald-400"></i> Upload New Image
+                    </label>
+                    <input type="file" name="image" accept="image/*" 
+                           class="w-full bg-gray-700 border border-gray-600 rounded-lg p-3 text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-emerald-500 file:text-white hover:file:bg-emerald-600 cursor-pointer">
+                    <p class="text-xs text-gray-500 mt-1">
+                        <i class="fa-regular fa-circle-info"></i> Leave empty to keep current image. Supports JPG, PNG, WEBP
+                    </p>
+                </div>
+                
+                <!-- Video URL -->
+                <div>
+                    <label class="block text-sm font-medium mb-1 text-gray-300">
+                        <i class="fa-brands fa-youtube text-red-400"></i> Video URL (YouTube Embed)
+                    </label>
+                    <input type="url" name="video_url" value="{{ founder.video_url if founder else '' }}" 
+                           class="w-full bg-gray-700 border border-gray-600 rounded-lg p-3 text-white focus:border-emerald-500 focus:outline-none" 
+                           placeholder="https://www.youtube.com/embed/VIDEO_ID">
+                    <p class="text-xs text-gray-500 mt-1">
+                        <i class="fa-regular fa-circle-info"></i> Only YouTube embed URLs (starts with https://www.youtube.com/embed/)
+                    </p>
+                </div>
+                
+                <!-- Buttons -->
+                <div class="flex gap-4 pt-4 border-t border-gray-700">
+                    <button type="submit" class="flex-1 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 px-6 py-3 rounded-xl font-bold text-white transition transform hover:scale-[1.02] shadow-lg shadow-emerald-500/25">
+                        <i class="fa-regular fa-floppy-disk"></i> Save Founder Details
+                    </button>
+                    <a href="/" class="flex-1 text-center bg-gray-700 hover:bg-gray-600 px-6 py-3 rounded-xl font-bold text-gray-300 transition">
+                        <i class="fa-regular fa-eye"></i> View Homepage
+                    </a>
+                </div>
+            </div>
+        </form>
+        
+        <!-- Founder Preview -->
+        {% if founder %}
+        <div class="mt-8 bg-gray-800 p-6 rounded-xl border border-gray-700">
+            <h3 class="text-lg font-bold mb-4 text-emerald-400">
+                <i class="fa-regular fa-eye"></i> Live Preview
+            </h3>
+            <div class="flex items-center gap-4 p-4 bg-gray-700/50 rounded-lg">
+                <div class="w-16 h-16 rounded-full overflow-hidden border-2 border-emerald-500/50 flex-shrink-0">
+                    {% if founder.image_url %}
+                        <img src="{{ url_for('static', filename='uploads/' + founder.image_url) }}" 
+                             class="w-full h-full object-cover">
+                    {% else %}
+                        <div class="w-full h-full bg-emerald-900/50 flex items-center justify-center text-3xl">👨‍🌾</div>
+                    {% endif %}
+                </div>
+                <div>
+                    <h4 class="text-white font-bold">{{ founder.name or 'Not set' }}</h4>
+                    <p class="text-emerald-400 text-sm">{{ founder.role or 'Not set' }}</p>
+                    {% if founder.quote %}
+                        <p class="text-amber-300 text-sm italic">"{{ founder.quote }}"</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <a href="/admin" class="inline-block mt-4 text-gray-400 hover:text-emerald-400 transition">
+            <i class="fa-solid fa-arrow-left"></i> Back to Admin Dashboard
+        </a>
+    </div>
+</body>
+</html>

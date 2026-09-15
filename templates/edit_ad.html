@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Ad - Yogiraj Agri-Tech</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        * { font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { background: #070f0a; color: #eaf6ef; min-height: 100vh; }
+        .glass-card {
+            background: rgba(13, 27, 18, 0.75);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(52, 211, 153, 0.15);
+        }
+        .input-field {
+            background: rgba(2, 8, 4, 0.8);
+            border: 1px solid rgba(52, 211, 153, 0.15);
+            color: #ecfdf5;
+            padding: 0.75rem 1rem;
+            border-radius: 0.75rem;
+            width: 100%;
+            font-size: 0.875rem;
+        }
+        .input-field:focus {
+            outline: none;
+            border-color: rgba(216, 168, 90, 0.6);
+            box-shadow: 0 0 0 3px rgba(216, 168, 90, 0.1);
+        }
+    </style>
+</head>
+<body class="p-8">
+
+<div class="max-w-2xl mx-auto">
+    <div class="flex items-center justify-between mb-6">
+        <h1 class="text-2xl font-bold text-white flex items-center gap-3">
+            <i class="fa-solid fa-pen text-blue-400"></i>
+            Edit Ad
+        </h1>
+        <a href="/admin#tab-ads" class="text-xs text-slate-400 hover:text-white border border-slate-700 px-3 py-1.5 rounded-lg transition">
+            ← Back
+        </a>
+    </div>
+
+    <div class="glass-card rounded-2xl p-6 md:p-8">
+        <form method="POST" enctype="multipart/form-data" class="space-y-4">
+            <div>
+                <label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Ad Title *</label>
+                <input type="text" name="title" value="{{ ad.title }}" required class="input-field">
+            </div>
+
+            <div>
+                <label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Description</label>
+                <textarea name="description" rows="2" class="input-field resize-none">{{ ad.description or '' }}</textarea>
+            </div>
+
+            <div>
+                <label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Link URL</label>
+                <input type="url" name="link_url" value="{{ ad.link_url or '' }}" class="input-field">
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Position</label>
+                    <select name="position" class="input-field">
+                        <option value="homepage" {% if ad.position == 'homepage' %}selected{% endif %}>🏠 Homepage</option>
+                        <option value="sidebar" {% if ad.position == 'sidebar' %}selected{% endif %}>📌 Sidebar</option>
+                        <option value="popup" {% if ad.position == 'popup' %}selected{% endif %}>🎯 Popup</option>
+                        <option value="footer" {% if ad.position == 'footer' %}selected{% endif %}>⬇️ Footer</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Priority</label>
+                    <select name="priority" class="input-field">
+                        <option value="0" {% if ad.priority == 0 %}selected{% endif %}>Normal</option>
+                        <option value="1" {% if ad.priority == 1 %}selected{% endif %}>Medium</option>
+                        <option value="2" {% if ad.priority == 2 %}selected{% endif %}>High</option>
+                        <option value="3" {% if ad.priority == 3 %}selected{% endif %}>Premium ⭐</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Current media preview -->
+            {% if ad.media_url %}
+            <div>
+                <label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Current Media</label>
+                <div class="w-40 h-24 rounded-lg overflow-hidden bg-slate-800 border border-slate-700">
+                    {% if ad.media_url.endswith('.mp4') or ad.media_url.endswith('.webm') %}
+                        <video src="/static/uploads/{{ ad.media_url }}" controls class="w-full h-full object-cover"></video>
+                    {% else %}
+                        <img src="/static/uploads/{{ ad.media_url }}" class="w-full h-full object-cover">
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <div>
+                <label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">New Media (optional — leave empty to keep current)</label>
+                <input type="file" name="media" accept="image/*,video/*"
+                    class="w-full bg-slate-950/80 border border-dashed border-emerald-500/30 rounded-xl px-4 py-2.5 text-slate-400 text-sm file:mr-3 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:bg-purple-500/20 file:text-purple-300">
+            </div>
+
+            <div class="flex gap-3 pt-4">
+                <button type="submit" class="flex-1 bg-gradient-to-r from-blue-500 to-indigo-600 hover:brightness-110 text-white font-bold py-3 rounded-xl transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-floppy-disk"></i> Save Changes
+                </button>
+                <a href="/admin#tab-ads" class="flex-1 text-center bg-slate-800/50 hover:bg-slate-800 text-slate-300 py-3 rounded-xl transition">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto">
+
+    <!-- Hero / Header Section -->
+    <div class="text-center mb-12 relative">
+        <!-- Decorative Golden Glow -->
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[200px] bg-amber-500/20 blur-[100px] pointer-events-none -z-10"></div>
+
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-amber-500/10 to-yellow-500/10 border border-amber-500/30 text-amber-300 text-xs font-bold uppercase tracking-wider mb-4 shadow-[0_0_20px_rgba(251,191,36,0.15)]">
+            <i class="fa-solid fa-handshake text-amber-400"></i> Grow With Us
+        </div>
+
+        <h2 class="font-display text-5xl md:text-6xl font-bold text-white mb-4 tracking-tight">
+            <span class="bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-300 bg-clip-text text-transparent drop-shadow-[0_0_15px_rgba(251,191,36,0.3)]">
+                🤝 Partner with Yogiraj
+            </span>
+        </h2>
+
+        <p class="text-slate-400 text-lg max-w-2xl mx-auto leading-relaxed">
+            Join India's fastest-growing Agritech ecosystem in <span class="text-amber-300 font-semibold">Sabarkantha</span>. 
+            Connect with 500+ active farmers and scale your agricultural business today.
+        </p>
+
+        <!-- Trust Stats -->
+        <div class="flex flex-wrap justify-center gap-8 mt-8 text-sm">
+            <div class="flex items-center gap-2 text-slate-300"><i class="fa-solid fa-circle-check text-emerald-400"></i> 500+ Farmers Network</div>
+            <div class="flex items-center gap-2 text-slate-300"><i class="fa-solid fa-circle-check text-emerald-400"></i> 24/7 Business Support</div>
+            <div class="flex items-center gap-2 text-slate-300"><i class="fa-solid fa-circle-check text-emerald-400"></i> AI-Powered Platform</div>
+        </div>
+    </div>
+
+    <!-- Main Glass Card -->
+    <div class="relative rounded-3xl p-[2px] bg-gradient-to-br from-amber-400/40 via-yellow-500/20 to-orange-400/40 shadow-2xl shadow-amber-900/20">
+        <div class="glass-card rounded-3xl p-8 md:p-12 border-0 relative overflow-hidden">
+            
+            <!-- Background Golden Grain -->
+            <div class="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(251,191,36,0.08),transparent_60%)] pointer-events-none"></div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 relative z-10">
+                
+                <!-- LEFT: Why Partner with Us? -->
+                <div class="space-y-6">
+                    <div>
+                        <h3 class="font-display text-2xl font-bold text-white mb-3 flex items-center gap-2">
+                            <i class="fa-solid fa-bolt text-amber-400"></i> Why Partner?
+                        </h3>
+                        <ul class="space-y-4 text-slate-300">
+                            <li class="flex items-start gap-3">
+                                <span class="w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-400 text-xs shrink-0 mt-0.5">1</span>
+                                <div><strong class="text-white">Direct Farmer Reach:</strong> Get your products in front of Sabarkantha's most active farming community.</div>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-400 text-xs shrink-0 mt-0.5">2</span>
+                                <div><strong class="text-white">Trusted Platform:</strong> Yogiraj Agri-Tech is a verified AI hub trusted by local cooperatives.</div>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-400 text-xs shrink-0 mt-0.5">3</span>
+                                <div><strong class="text-white">Fast-Track Onboarding:</strong> Submit the form and connect directly with our founder via WhatsApp instantly.</div>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/20">
+                        <p class="text-xs text-amber-300 flex items-center gap-2">
+                            <i class="fa-solid fa-star text-amber-400"></i> "We partnered with Yogiraj and saw a 40% increase in local sales within 3 months." — <span class="font-semibold">IFFCO Distributor</span>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- RIGHT: Partnership Form (WhatsApp Redirect) -->
+                <div class="glass-card p-6 rounded-2xl border border-amber-500/20 bg-slate-950/60">
+                    <h3 class="text-xl font-bold text-white mb-1 flex items-center gap-2">
+                        <i class="fa-solid fa-pen-to-square text-amber-400"></i> Quick Inquiry
+                    </h3>
+                    <p class="text-xs text-slate-400 mb-5">Fill in the details. We'll connect instantly on WhatsApp.</p>
+
+                    <form action="/submit_partnership" method="POST" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-[10px] text-slate-400 block mb-1 font-semibold uppercase tracking-wider">Brand / Company *</label>
+                                <input type="text" name="brand_name" placeholder="e.g. Kisan Ltd." required class="w-full bg-slate-950/80 border border-amber-500/25 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-amber-400 transition">
+                            </div>
+                            <div>
+                                <label class="text-[10px] text-slate-400 block mb-1 font-semibold uppercase tracking-wider">Contact Person *</label>
+                                <input type="text" name="contact_person" placeholder="e.g. Rajesh Kumar" required class="w-full bg-slate-950/80 border border-amber-500/25 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-amber-400 transition">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-[10px] text-slate-400 block mb-1 font-semibold uppercase tracking-wider">Email Address *</label>
+                                <input type="email" name="email" placeholder="brand@example.com" required class="w-full bg-slate-950/80 border border-amber-500/25 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-amber-400 transition">
+                            </div>
+                            <div>
+                                <label class="text-[10px] text-slate-400 block mb-1 font-semibold uppercase tracking-wider">Phone Number *</label>
+                                <input type="text" name="phone" placeholder="e.g. 9876543210" required class="w-full bg-slate-950/80 border border-amber-500/25 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-amber-400 transition">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="text-[10px] text-slate-400 block mb-1 font-semibold uppercase tracking-wider">Product / Service Category *</label>
+                            <select name="product_category" required class="w-full bg-slate-950/80 border border-amber-500/25 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-amber-400 transition">
+                                <option value="">Select Category</option>
+                                <option value="Fertilizers & Seeds">🌱 Fertilizers & Seeds</option>
+                                <option value="Pesticides & Chemicals">🧪 Pesticides & Chemicals</option>
+                                <option value="Machinery & Equipment">🚜 Machinery & Equipment</option>
+                                <option value="Spray Pumps">💧 Spray Pumps</option>
+                                <option value="Jatka Machine">⚙️ Jatka Machine</option>
+                                <option value="Silage & Feed">🌿 Silage & Feed</option>
+                                <option value="Logistics & Transport">🚛 Logistics & Transport</option>
+                                <option value="Other">📦 Other</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="text-[10px] text-slate-400 block mb-1 font-semibold uppercase tracking-wider">Your Message / Details</label>
+                            <textarea name="message" rows="3" placeholder="Tell us about your brand, products, or how you want to partner..." required class="w-full bg-slate-950/80 border border-amber-500/25 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-amber-400 transition resize-none"></textarea>
+                        </div>
+
+                        <button type="submit" class="w-full bg-gradient-to-r from-amber-400 to-yellow-500 hover:brightness-110 text-slate-950 font-bold py-4 rounded-2xl shadow-lg shadow-amber-500/20 transition transform hover:scale-[1.01] flex items-center justify-center gap-2 text-sm">
+                            <i class="fa-brands fa-whatsapp text-xl"></i> Submit & Connect on WhatsApp
+                        </button>
+                        
+                        <p class="text-[10px] text-center text-slate-500 mt-2">We will respond within 5 minutes on WhatsApp.</p>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Footer Accent -->
+            <div class="absolute bottom-6 right-6 text-[10px] text-amber-500/30 font-mono tracking-widest uppercase opacity-50">
+                ★ Premium Partnership
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

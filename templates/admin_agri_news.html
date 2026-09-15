@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-8">
+
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-8">
+        <div class="flex items-center gap-4">
+            <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-400 to-green-500 flex items-center justify-center text-slate-950 text-2xl shadow-lg shadow-emerald-500/20">
+                <i class="fa-solid fa-newspaper"></i>
+            </div>
+            <div>
+                <h2 class="font-display text-2xl font-bold text-white">📰 Agri News Management</h2>
+                <p class="text-xs text-slate-400 font-mono tracking-wide">Manage news, tips & articles for farmers</p>
+            </div>
+        </div>
+        <a href="/admin" class="flex items-center gap-2 bg-slate-800/50 hover:bg-slate-800 text-slate-400 hover:text-emerald-300 border border-slate-700/50 px-5 py-2.5 rounded-xl text-sm transition duration-300">
+            <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+
+    <!-- Add News Form -->
+    <div class="glass-card rounded-2xl p-6 md:p-8 border border-emerald-500/20 mb-8">
+        <h3 class="text-emerald-400 font-bold mb-3 text-sm flex items-center gap-2">
+            <i class="fa-solid fa-plus-circle"></i> Add New News / Tip
+        </h3>
+        <form action="/admin/add_agri_news" method="POST" enctype="multipart/form-data" class="space-y-4">
+            <div>
+                <label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Title *</label>
+                <input type="text" name="title" placeholder="e.g. Kharif Season Guide 2026" required class="w-full bg-slate-900 border border-emerald-500/30 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-emerald-400">
+            </div>
+            <div>
+                <label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Content / Description *</label>
+                <textarea name="content" rows="4" placeholder="Write the full news or tip here..." required class="w-full bg-slate-900 border border-emerald-500/30 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-emerald-400 resize-none"></textarea>
+            </div>
+            <div>
+                <label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Link URL (Optional)</label>
+                <input type="url" name="link_url" placeholder="https://example.com" class="w-full bg-slate-900 border border-emerald-500/30 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-emerald-400">
+            </div>
+            <div>
+                <label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Upload Image</label>
+                <input type="file" name="news_image" accept="image/*" class="w-full bg-slate-900 border border-dashed border-emerald-500/30 rounded-lg px-4 py-2 text-slate-400 text-sm focus:outline-none focus:border-emerald-400 file:mr-3 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:bg-emerald-500/20 file:text-emerald-300">
+            </div>
+            <button type="submit" class="w-full bg-gradient-to-r from-emerald-500 to-green-600 text-slate-950 font-bold py-2.5 rounded-xl text-sm hover:scale-105 transition">+ Add News</button>
+        </form>
+    </div>
+
+    <!-- Current News List -->
+    <div class="glass-card rounded-2xl p-6 md:p-8 border border-emerald-500/20">
+        <h3 class="text-white font-bold mb-3 text-sm flex items-center gap-2">
+            <i class="fa-solid fa-list text-emerald-400"></i> Current News
+            <span class="text-xs font-normal text-slate-400">({{ news_list|length }})</span>
+        </h3>
+        <div class="table-container border border-emerald-500/10 rounded-xl overflow-hidden bg-slate-950/40">
+            <table class="w-full">
+                <thead class="bg-emerald-950/20 border-b border-emerald-500/20">
+                    <tr>
+                        <th class="px-6 py-4 text-left text-emerald-300 font-semibold text-xs uppercase tracking-wider">Image</th>
+                        <th class="px-6 py-4 text-left text-emerald-300 font-semibold text-xs uppercase tracking-wider">Title</th>
+                        <th class="px-6 py-4 text-left text-emerald-300 font-semibold text-xs uppercase tracking-wider">Content</th>
+                        <th class="px-6 py-4 text-right text-emerald-300 font-semibold text-xs uppercase tracking-wider">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-emerald-500/10">
+                    {% for news in news_list %}
+                    <tr class="hover:bg-emerald-500/5 transition duration-200">
+                        <td class="px-6 py-4">
+                            {% if news.image_url %}
+                            <img src="/static/uploads/{{ news.image_url }}" class="w-12 h-12 rounded-lg object-cover">
+                            {% else %}
+                            <div class="w-12 h-12 rounded-lg bg-slate-800 flex items-center justify-center text-slate-600 text-xs">No</div>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 font-semibold text-white">{{ news.title }}</td>
+                        <td class="px-6 py-4 text-slate-400 text-sm truncate max-w-[200px]">{{ news.content }}</td>
+                        <td class="px-6 py-4 text-right">
+                            <a href="/admin/delete_agri_news/{{ news.id }}" onclick="return confirm('Delete this news?')" class="inline-flex items-center gap-1.5 bg-rose-500/10 hover:bg-rose-500 text-rose-400 hover:text-white px-4 py-2 rounded-lg text-xs font-semibold transition duration-200">
+                                <i class="fa-solid fa-trash-can"></i> Delete
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" class="px-6 py-16 text-center text-slate-500">
+                            <div class="text-6xl mb-4 text-slate-700">📰</div>
+                            <p class="font-medium text-lg">No news added yet.</p>
+                            <p class="text-sm text-slate-600 mt-1">Add your first news article above.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,1298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Yogiraj Agri-Tech</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+        :root{
+            --bg: #070f0a;
+            --emerald: #2fbf7f;
+            --gold: #d8a85a;
+        }
+        * { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .font-display{ font-family: 'Fraunces', serif; }
+        .font-mono{ font-family: 'IBM Plex Mono', monospace; }
+        body { background: var(--bg); color: #ecfdf5; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0a1a0f; }
+        ::-webkit-scrollbar-thumb { background: #2e7d32; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #4caf50; }
+
+        .field-rule{
+            height:3px; width:100%;
+            background: repeating-linear-gradient(90deg, var(--emerald) 0 18px, transparent 18px 26px, var(--gold) 26px 32px, transparent 32px 40px);
+            opacity:.5;
+        }
+
+        .glass-card {
+            background: rgba(13, 27, 18, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(52, 211, 153, 0.10);
+        }
+        .glass-card-hover:hover {
+            border-color: rgba(216, 168, 90, 0.35);
+            box-shadow: 0 8px 40px rgba(16, 185, 129, 0.08);
+        }
+        .input-field {
+            background: rgba(2, 8, 4, 0.8);
+            border: 1px solid rgba(52, 211, 153, 0.15);
+            color: #ecfdf5;
+            padding: 0.75rem 1rem;
+            border-radius: 0.75rem;
+            width: 100%;
+            font-size: 0.875rem;
+            transition: all 0.3s ease;
+        }
+        .input-field:focus {
+            outline: none;
+            border-color: rgba(216, 168, 90, 0.6);
+            box-shadow: 0 0 0 3px rgba(216, 168, 90, 0.1);
+        }
+        .input-field::placeholder { color: rgba(148, 163, 184, 0.5); }
+        .btn-primary {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: #060d08;
+            font-weight: 700;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(16, 185, 129, 0.3);
+        }
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.25);
+            padding: 0.4rem 0.8rem;
+            border-radius: 0.5rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn-danger:hover { background: #ef4444; color: white; }
+        .badge-status { padding: 0.2rem 0.8rem; border-radius: 9999px; font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+        .badge-active { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+        .badge-inactive { background: rgba(239, 68, 68, 0.15); color: #f87171; }
+        .table-container { overflow-x: auto; border-radius: 1rem; border: 1px solid rgba(52, 211, 153, 0.08); }
+        .table-container table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+        .table-container th { text-align: left; padding: 0.8rem 1rem; background: rgba(2, 8, 4, 0.6); color: rgba(148, 163, 184, 0.8); font-weight: 600; text-transform: uppercase; font-size: 0.6rem; letter-spacing: 0.08em; border-bottom: 1px solid rgba(52, 211, 153, 0.08); }
+        .table-container td { padding: 0.8rem 1rem; border-bottom: 1px solid rgba(52, 211, 153, 0.05); }
+        .table-container tr:hover td { background: rgba(216, 168, 90, 0.03); }
+        .tab-btn { padding: 0.6rem 1.25rem; border-radius: 0.75rem; font-weight: 600; font-size: 0.78rem; transition: all 0.25s ease; background: transparent; color: rgba(148, 163, 184, 0.6); border: none; cursor: pointer; white-space: nowrap; }
+        .tab-btn:hover { color: #ecfdf5; background: rgba(16, 185, 129, 0.06); }
+        .tab-btn.active { background: rgba(216, 168, 90, 0.14); color: #f2cf8f; box-shadow: inset 0 0 0 1px rgba(216,168,90,0.3); }
+        .tab-divider{ width:1px; align-self:stretch; background: rgba(52,211,153,0.12); margin: 0 0.35rem; }
+        .stat-card { padding: 1.25rem; border-radius: 1rem; background: rgba(13, 27, 18, 0.5); border: 1px solid rgba(52, 211, 153, 0.08); transition: all .25s ease; }
+        .stat-card:hover{ border-color: rgba(216,168,90,0.3); transform: translateY(-2px); }
+        .stat-card .number { font-family: 'Fraunces', serif; font-size: 2rem; font-weight: 700; color: #34d399; }
+        .stat-card .label { font-size: 0.7rem; color: rgba(148, 163, 184, 0.6); text-transform: uppercase; letter-spacing: 0.05em; }
+        .stat-card .icon { font-size: 1.5rem; color: rgba(16, 185, 129, 0.3); }
+        .preview-thumb { width: 44px; height: 44px; object-fit: cover; border-radius: 0.5rem; border: 1px solid rgba(52, 211, 153, 0.1); }
+        .file-input-wrapper { position: relative; overflow: hidden; }
+        .file-input-wrapper input[type="file"] { position: absolute; left: 0; top: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer; }
+        .file-input-label { display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem 1rem; background: rgba(2, 8, 4, 0.6); border: 1px dashed rgba(52, 211, 153, 0.25); border-radius: 0.75rem; color: rgba(148, 163, 184, 0.6); font-size: 0.8rem; transition: all 0.3s ease; }
+        .file-input-label:hover { border-color: rgba(216, 168, 90, 0.4); background: rgba(2, 8, 4, 0.8); }
+        .tab-panel { display: block; }
+        .tab-panel.hidden { display: none; }
+        .search-box{ position: relative; }
+        .search-box i{ position:absolute; left:14px; top:50%; transform:translateY(-50%); color: rgba(148,163,184,0.5); font-size:.75rem; }
+        .search-box input{ padding-left: 2.4rem; }
+        a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible{
+            outline: 2px solid var(--gold); outline-offset: 2px; border-radius: 6px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="field-rule"></div>
+    <!-- Header -->
+    <header class="border-b border-emerald-900/30 bg-slate-950/60 backdrop-blur-xl sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-4">
+                <a href="/" class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-400 to-amber-500 flex items-center justify-center text-slate-950 font-black text-lg shadow-lg shadow-amber-500/20 hover:scale-105 transition">
+                    <i class="fa-solid fa-crown"></i>
+                </a>
+                <div>
+                    <h1 class="font-display text-lg font-semibold text-white">Admin Control Panel</h1>
+                    <p class="font-mono text-[10px] text-emerald-400 font-semibold tracking-widest uppercase">Yogiraj Agri-Tech Management</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                <a href="/" class="text-xs text-slate-400 hover:text-amber-300 transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-arrow-left"></i> Back to Site
+                </a>
+                <a href="/logout" class="flex items-center gap-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/25 px-4 py-2 rounded-xl text-sm font-semibold transition duration-300">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                    <span class="hidden sm:inline">Logout</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <div class="max-w-7xl mx-auto px-6 py-8">
+
+        <!-- Stats Row -->
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+            <div class="stat-card flex justify-between items-center">
+                <div><div class="label">Products</div><div class="number">{{ products|length }}</div></div>
+                <div class="icon"><i class="fa-solid fa-box"></i></div>
+            </div>
+            <div class="stat-card flex justify-between items-center">
+                <div><div class="label">Rentals</div><div class="number">{{ rentals|length }}</div></div>
+                <div class="icon"><i class="fa-solid fa-tractor"></i></div>
+            </div>
+            <div class="stat-card flex justify-between items-center">
+                <div><div class="label">Sales</div><div class="number">{{ sales|length if sales else 0 }}</div></div>
+                <div class="icon"><i class="fa-solid fa-fire text-orange-400"></i></div>
+            </div>
+            <div class="stat-card flex justify-between items-center">
+                <div><div class="label">Ads</div><div class="number">{{ ads|length if ads else 0 }}</div></div>
+                <div class="icon"><i class="fa-solid fa-ad text-purple-400"></i></div>
+            </div>
+            <div class="stat-card flex justify-between items-center">
+                <div><div class="label">Posts</div><div class="number">{{ blogs|length }}</div></div>
+                <div class="icon"><i class="fa-solid fa-newspaper"></i></div>
+            </div>
+        </div>
+
+        <!-- Quick Management Tools -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+
+            <div class="glass-card p-6 rounded-2xl border border-emerald-500/20 hover:border-emerald-400/50 transition duration-300 group hover:-translate-y-1">
+                <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 text-2xl mb-3 group-hover:scale-110 transition">
+                    <i class="fa-solid fa-crown"></i>
+                </div>
+                <h3 class="font-display text-lg font-semibold text-white mb-1">Founder / Admin Profile</h3>
+                <p class="text-xs text-slate-400 mb-4">Edit name, photo, bio, and quote displayed on the homepage.</p>
+                <a href="/admin/founder" class="inline-block bg-gradient-to-r from-emerald-500 to-green-600 text-slate-950 text-xs font-bold px-4 py-2 rounded-xl transition hover:scale-105 w-full text-center">
+                    <i class="fa-solid fa-pen-to-square mr-1"></i> Edit Founder Details
+                </a>
+            </div>
+
+            <div class="glass-card p-6 rounded-2xl border border-amber-500/20 hover:border-amber-400/50 transition duration-300 group hover:-translate-y-1">
+                <div class="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 text-2xl mb-3 group-hover:scale-110 transition">
+                    <i class="fa-solid fa-handshake"></i>
+                </div>
+                <h3 class="font-display text-lg font-semibold text-white mb-1">Brand Partners</h3>
+                <p class="text-xs text-slate-400 mb-4">Manage scrolling accreditations & promoters.</p>
+                <a href="/admin/brand_partners" class="inline-block bg-gradient-to-r from-amber-500 to-yellow-600 text-slate-950 text-xs font-bold px-4 py-2 rounded-xl transition hover:scale-105 w-full text-center">
+                    <i class="fa-solid fa-pen-to-square mr-1"></i> Manage Partners
+                </a>
+            </div>
+
+            <div class="glass-card p-6 rounded-2xl border border-amber-500/20 hover:border-amber-400/50 transition duration-300 group hover:-translate-y-1">
+                <div class="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 text-2xl mb-3 group-hover:scale-110 transition">
+                    <i class="fa-solid fa-trophy"></i>
+                </div>
+                <h3 class="font-display text-lg font-semibold text-white mb-1">Achievement Badges</h3>
+                <p class="text-xs text-slate-400 mb-4">Manage trust badges, accreditations, and awards.</p>
+                <a href="/admin/badges" class="inline-block bg-gradient-to-r from-amber-500 to-yellow-600 text-slate-950 text-xs font-bold px-4 py-2 rounded-xl transition hover:scale-105 w-full text-center">
+                    <i class="fa-solid fa-pen-to-square mr-1"></i> Manage Badges
+                </a>
+            </div>
+
+        </div>
+
+        <!-- Tabs Navigation — Clean & Organized -->
+        <div class="flex flex-wrap items-center gap-1.5 border-b border-emerald-900/20 pb-3 mb-6 overflow-x-auto">
+            <!-- View Section -->
+            <span class="font-mono text-[9px] uppercase tracking-widest text-slate-500 mr-2">View</span>
+            <button class="tab-btn active" onclick="switchTab('products')" id="tab-products"><i class="fa-solid fa-box mr-2"></i>Products</button>
+            <button class="tab-btn" onclick="switchTab('rentals')" id="tab-rentals"><i class="fa-solid fa-tractor mr-2"></i>Rentals</button>
+            <button class="tab-btn" onclick="switchTab('sales')" id="tab-sales"><i class="fa-solid fa-fire mr-2 text-orange-400"></i>Sales</button>
+            <button class="tab-btn" onclick="switchTab('ads')" id="tab-ads"><i class="fa-solid fa-ad mr-2 text-purple-400"></i>Ads</button>
+            <button class="tab-btn" onclick="switchTab('posts')" id="tab-posts"><i class="fa-solid fa-newspaper mr-2"></i>Posts</button>
+            <button class="tab-btn" onclick="switchTab('agri-news')" id="tab-agri-news"><i class="fa-solid fa-newspaper mr-2 text-emerald-400"></i>Agri News</button>
+
+            
+            <div class="tab-divider"></div>
+            
+            <!-- Add Section -->
+            <span class="font-mono text-[9px] uppercase tracking-widest text-slate-500 mr-2">Add</span>
+            <button class="tab-btn" onclick="switchTab('add-product')" id="tab-add-product"><i class="fa-solid fa-plus mr-2 text-emerald-400"></i>Product</button>
+            <button class="tab-btn" onclick="switchTab('add-rental')" id="tab-add-rental"><i class="fa-solid fa-plus mr-2 text-emerald-400"></i>Rental</button>
+            <button class="tab-btn" onclick="switchTab('add-sale')" id="tab-add-sale"><i class="fa-solid fa-plus mr-2 text-orange-400"></i>Sale</button>
+            <button class="tab-btn" onclick="switchTab('add-ad')" id="tab-add-ad"><i class="fa-solid fa-plus mr-2 text-purple-400"></i>Ad</button>
+            <button class="tab-btn" onclick="switchTab('add-post')" id="tab-add-post"><i class="fa-solid fa-plus mr-2 text-emerald-400"></i>Post</button>
+            <button class="tab-btn" onclick="switchTab('add-land')" id="tab-add-land"><i class="fa-solid fa-plus mr-2 text-emerald-400"></i>Land</button>
+
+            <div class="tab-divider"></div>
+            
+            <!-- Extra Features -->
+            <span class="font-mono text-[9px] uppercase tracking-widest text-slate-500 mr-2">Features</span>
+            <button class="tab-btn" onclick="switchTab('whatsapp-groups')" id="tab-whatsapp-groups"><i class="fa-solid fa-users mr-2 text-emerald-400"></i>WhatsApp Groups</button>
+        </div>
+
+        <!-- ============================================ -->
+        <!-- TAB: PRODUCTS LIST -->
+        <!-- ============================================ -->
+        <div id="panel-products" class="tab-panel">
+            <div class="flex flex-wrap justify-between items-center gap-3 mb-4">
+                <h2 class="font-display text-xl font-semibold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-box text-emerald-400"></i> Products Inventory
+                    <span class="text-xs font-normal text-slate-400 ml-2">({{ products|length }} items)</span>
+                </h2>
+                <div class="search-box w-full sm:w-64">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" oninput="filterTable('productsTable', this.value)" placeholder="Search products..." class="input-field !py-2 text-xs">
+                </div>
+            </div>
+            <div class="table-container">
+                <table id="productsTable">
+                    <thead><tr><th>Media</th><th>Title</th><th>Category</th><th>Price</th><th>Stock</th><th class="text-right">Action</th></tr></thead>
+                    <tbody>
+                        {% for p in products %}
+                        <tr>
+                            <td>{% if p.media_url %}<img src="/static/uploads/{{ p.media_url }}" class="preview-thumb">{% else %}<div class="w-11 h-11 rounded-lg bg-slate-800 flex items-center justify-center text-slate-600 text-xs">No</div>{% endif %}</td>
+                            <td class="font-semibold text-white">{{ p.title }}</td>
+                            <td><span class="badge-status badge-active">{{ p.category }}</span></td>
+                            <td class="text-emerald-400 font-bold">₹{{ p.price }}</td>
+                            <td>{{ p.stock_qty }}</td>
+                            <td class="text-right"><a href="/admin/delete_product/{{ p.id }}" class="btn-danger" onclick="return confirm('Delete this product?')"><i class="fa-solid fa-trash-can mr-1"></i> Delete</a></td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="6" class="text-center py-8 text-slate-500">No products added yet.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ============================================ -->
+        <!-- TAB: RENTALS LIST -->
+        <!-- ============================================ -->
+        <div id="panel-rentals" class="tab-panel hidden">
+            <div class="flex flex-wrap justify-between items-center gap-3 mb-4">
+                <h2 class="font-display text-xl font-semibold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-tractor text-emerald-400"></i> Rental Equipment
+                    <span class="text-xs font-normal text-slate-400 ml-2">({{ rentals|length }} items)</span>
+                </h2>
+                <div class="search-box w-full sm:w-64">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" oninput="filterTable('rentalsTable', this.value)" placeholder="Search rentals..." class="input-field !py-2 text-xs">
+                </div>
+            </div>
+            <div class="table-container">
+                <table id="rentalsTable">
+                    <thead><tr><th>Media</th><th>Equipment</th><th>Location</th><th>Daily Rate</th><th>Status</th><th class="text-right">Action</th></tr></thead>
+                    <tbody>
+                        {% for r in rentals %}
+                        <tr>
+                            <td>{% if r.media_url %}<img src="/static/uploads/{{ r.media_url }}" class="preview-thumb">{% else %}<div class="w-11 h-11 rounded-lg bg-slate-800 flex items-center justify-center text-slate-600 text-xs">No</div>{% endif %}</td>
+                            <td class="font-semibold text-white">{{ r.title }}</td>
+                            <td class="text-slate-400"><i class="fa-solid fa-location-dot text-emerald-400 mr-1"></i>{{ r.location }}</td>
+                            <td class="text-emerald-400 font-bold">₹{{ r.daily_rate }}/day</td>
+                            <td><span class="badge-status badge-active">Available</span></td>
+                            <td class="text-right"><a href="/admin/delete_rental/{{ r.id }}" class="btn-danger" onclick="return confirm('Delete this rental?')"><i class="fa-solid fa-trash-can mr-1"></i> Delete</a></td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="6" class="text-center py-8 text-slate-500">No rentals available.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ============================================ -->
+        <!-- TAB: SALES LIST -->
+        <!-- ============================================ -->
+        <div id="panel-sales" class="tab-panel hidden">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="font-display text-xl font-semibold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-fire text-orange-400"></i> Active Sales
+                    <span class="text-xs font-normal text-slate-400 ml-2">({{ sales|length if sales else 0 }} sales)</span>
+                </h2>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead><tr><th>Title</th><th>Discount</th><th>Start Date</th><th>End Date</th><th>Status</th><th class="text-right">Action</th></tr></thead>
+                    <tbody>
+                        {% if sales %}
+                        {% for s in sales %}
+                        <tr>
+                            <td class="font-semibold text-white">{{ s.title }}</td>
+                            <td class="text-orange-400 font-bold">{{ s.discount_percentage }}%</td>
+                            <td class="text-slate-400 text-xs">{{ s.start_date }}</td>
+                            <td class="text-slate-400 text-xs">{{ s.end_date }}</td>
+                            <td>
+                                {% if s.is_active %}
+                                <span class="badge-status badge-active">Active</span>
+                                {% else %}
+                                <span class="badge-status badge-inactive">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-right"><a href="/admin/delete_sale/{{ s.id }}" class="btn-danger" onclick="return confirm('Delete this sale?')"><i class="fa-solid fa-trash-can mr-1"></i> Delete</a></td>
+                        </tr>
+                        {% endfor %}
+                        {% else %}
+                        <tr><td colspan="6" class="text-center py-8 text-slate-500">No sales created yet. Use "Sale" under Add.</td></tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ============================================ -->
+        <!-- TAB: ADS LIST -->
+        <!-- ============================================ -->
+        <div id="panel-ads" class="tab-panel hidden">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="font-display text-xl font-semibold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-ad text-purple-400"></i> Advertisements
+                    <span class="text-xs font-normal text-slate-400 ml-2">({{ ads|length if ads else 0 }} ads)</span>
+                </h2>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead><tr><th>Title</th><th>Position</th><th>Clicks</th><th>Views</th><th>Status</th><th class="text-right">Action</th></tr></thead>
+                    <tbody>
+                        {% if ads %}
+                        {% for ad in ads %}
+                        <tr>
+                            <td class="font-semibold text-white">{{ ad.title }}</td>
+                            <td class="text-slate-400 text-xs">{{ ad.position }}</td>
+                            <td class="text-emerald-400">{{ ad.clicks or 0 }}</td>
+                            <td class="text-blue-400">{{ ad.views or 0 }}</td>
+                            <td>
+                                {% if ad.is_active %}
+                                <span class="badge-status badge-active">Active</span>
+                                {% else %}
+                                <span class="badge-status badge-inactive">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-right"><a href="/admin/delete_ad/{{ ad.id }}" class="btn-danger" onclick="return confirm('Delete this ad?')"><i class="fa-solid fa-trash-can mr-1"></i> Delete</a></td>
+                        </tr>
+                        {% endfor %}
+                        {% else %}
+                        <tr><td colspan="6" class="text-center py-8 text-slate-500">No ads created yet. Use "Ad" under Add.</td></tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ============================================ -->
+        <!-- TAB: POSTS LIST -->
+        <!-- ============================================ -->
+        <div id="panel-posts" class="tab-panel hidden">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="font-display text-xl font-semibold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-newspaper text-emerald-400"></i> Published Posts
+                    <span class="text-xs font-normal text-slate-400 ml-2">({{ blogs|length }} posts)</span>
+                </h2>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead><tr><th>Author</th><th>Title</th><th>Rating</th><th>Date</th><th class="text-right">Action</th></tr></thead>
+                    <tbody>
+                        {% for b in blogs %}
+<tr>
+    <td class="font-medium text-white">{{ b.author_name }}</td>
+    <td class="text-slate-300">{{ b.title }}</td>
+    <td><span class="text-amber-400">{% for i in range(b.rating|int) %}⭐{% endfor %}</span></td>
+    <td class="text-slate-400 text-xs">{{ b.created_at.strftime('%Y-%m-%d') if b.created_at else '' }}</td>
+    <td class="text-right"><a href="/admin/delete_blog/{{ b.id }}" class="btn-danger" onclick="return confirm('Delete this post?')"><i class="fa-solid fa-trash-can mr-1"></i> Delete</a></td>
+</tr>
+{% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ============================================ -->
+        <!-- TAB: ADD PRODUCT FORM -->
+        <!-- ============================================ -->
+        <div id="panel-add-product" class="tab-panel hidden">
+            <div class="glass-card glass-card-hover p-8 rounded-2xl max-w-2xl mx-auto">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 text-xl"><i class="fa-solid fa-box"></i></div>
+                    <div><h2 class="font-display text-2xl font-semibold text-white">Add New Product</h2><p class="text-xs text-slate-400">Fertilizers, seeds, pesticides & more</p></div>
+                </div>
+                <form action="/admin/add_product" method="POST" enctype="multipart/form-data" class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div><label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Product Title *</label><input type="text" name="title" placeholder="e.g. NPK 19:19:19 Fertilizer" required class="input-field"></div>
+                        <div>
+                            <label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Category *</label>
+                            <div class="flex gap-2">
+                                <select name="category" id="productCategorySelect" required class="input-field flex-1">
+                                    <option value="">Select Category</option>
+                                    {% for cat in categories %}
+                                    <option value="{{ cat.name }}">{{ cat.name }}</option>
+                                    {% endfor %}
+                                </select>
+                                <!-- Small Add Category Modal Trigger -->
+                                <button type="button" onclick="openCategoryModal()" class="bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 px-3 py-2 rounded-xl text-sm transition">
+                                    <i class="fa-solid fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div><label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Price (₹) *</label><input type="number" step="0.01" name="price" placeholder="0.00" required class="input-field"></div>
+                        <div><label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Stock Quantity *</label><input type="number" name="stock_qty" placeholder="0" required class="input-field"></div>
+                    </div>
+                    <div><label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Description</label><textarea name="description" rows="3" placeholder="Describe the product..." class="input-field resize-none"></textarea></div>
+                    <div><label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Extra Info</label><input type="text" name="extra_info" placeholder="e.g. Brand: IFFCO, Pack: 50kg" class="input-field"></div>
+                    <div><label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">YouTube Video Link</label><input type="url" name="youtube_url" placeholder="https://youtube.com/watch?v=..." class="input-field"></div>
+                    <div><label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Upload Images / Videos (Multiple)</label>
+                        <div class="file-input-wrapper mb-2">
+                            <div class="file-input-label bg-slate-950/80 border border-dashed border-emerald-500/30 rounded-xl px-4 py-3 text-slate-400 text-sm hover:border-emerald-400 transition">
+                                <i class="fa-solid fa-cloud-arrow-up text-emerald-400"></i>
+                                <span id="product-media-label">Choose files</span>
+                            </div>
+                            <input type="file" name="media_files[]" multiple accept="image/*,video/*" onchange="updateMultiFileLabel(this, 'product-media-label')">
+                        </div>
+                        <p class="text-[10px] text-slate-500">Select multiple images or videos.</p>
+                    </div>
+                    <button type="submit" class="btn-primary flex items-center justify-center gap-2"><i class="fa-solid fa-plus"></i> Add Product</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- ============================================ -->
+        <!-- TAB: ADD RENTAL FORM -->
+        <!-- ============================================ -->
+        <div id="panel-add-rental" class="tab-panel hidden">
+            <div class="glass-card glass-card-hover p-8 rounded-2xl max-w-2xl mx-auto">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 text-xl"><i class="fa-solid fa-tractor"></i></div>
+                    <div><h2 class="font-display text-2xl font-semibold text-white">Add New Rental Equipment</h2><p class="text-xs text-slate-400">Tractors, drones, harvesters & more</p></div>
+                </div>
+                <form action="/admin/add_rental" method="POST" enctype="multipart/form-data" class="space-y-4">
+                    <div><label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Equipment Title *</label><input type="text" name="title" placeholder="e.g. John Deere 5050D Tractor" required class="input-field"></div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div><label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Daily Rate (₹) *</label><input type="number" step="0.01" name="daily_rate" placeholder="0.00" required class="input-field"></div>
+                        <div><label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Location *</label><input type="text" name="location" placeholder="e.g. Himmatnagar" required class="input-field"></div>
+                    </div>
+                    <div><label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Description</label><textarea name="description" rows="3" placeholder="Describe the equipment..." class="input-field resize-none"></textarea></div>
+                    <div><label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Extra Info</label><input type="text" name="extra_info" placeholder="e.g. HP: 50, Attachments: Rotavator" class="input-field"></div>
+                    <div><label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">YouTube Video Link</label><input type="url" name="youtube_url" placeholder="https://youtube.com/watch?v=..." class="input-field"></div>
+                    <div><label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Equipment Image / Video</label>
+                        <div class="file-input-wrapper">
+                            <div class="file-input-label"><i class="fa-solid fa-cloud-arrow-up text-emerald-400"></i><span id="rental-file-label">Choose file</span></div>
+                            <input type="file" name="media" accept="image/*,video/*" onchange="updateFileLabel(this, 'rental-file-label')">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-primary flex items-center justify-center gap-2"><i class="fa-solid fa-plus"></i> Add Rental</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- ============================================ -->
+        <!-- TAB: ADD SALE FORM -->
+        <!-- ============================================ -->
+        <div id="panel-add-sale" class="tab-panel hidden">
+            <div class="glass-card glass-card-hover p-8 rounded-2xl max-w-2xl mx-auto">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="w-12 h-12 rounded-2xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-400 text-xl"><i class="fa-solid fa-fire"></i></div>
+                    <div><h2 class="font-display text-2xl font-semibold text-white">Create Sale</h2><p class="text-xs text-slate-400">Add seasonal offers and discounts</p></div>
+                </div>
+
+                <form action="/admin/add_sale" method="POST" enctype="multipart/form-data" class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Sale Title *</label>
+                            <input type="text" name="title" placeholder="e.g. Monsoon Mega Sale" required class="input-field">
+                        </div>
+                        <div>
+                            <label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Discount % *</label>
+                            <input type="number" name="discount_percentage" placeholder="30" required class="input-field">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Description</label>
+                        <textarea name="description" rows="2" placeholder="Describe your sale..." class="input-field resize-none"></textarea>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Start Date *</label>
+                            <input type="datetime-local" name="start_date" required class="input-field">
+                        </div>
+                        <div>
+                            <label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">End Date *</label>
+                            <input type="datetime-local" name="end_date" required class="input-field">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Banner Image</label>
+                        <div class="file-input-wrapper">
+                            <div class="file-input-label">
+                                <i class="fa-solid fa-cloud-arrow-up text-emerald-400"></i>
+                                <span id="sale-banner-label">Choose banner</span>
+                            </div>
+                            <input type="file" name="banner_image" accept="image/*" onchange="updateFileLabel(this, 'sale-banner-label')">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Select Products for Sale</label>
+                        <div id="sale-products-container" class="space-y-2">
+                            <div class="flex gap-2">
+                                <select name="product_ids[]" class="input-field flex-1">
+                                    <option value="">Select Product</option>
+                                    {% for p in products %}
+                                    <option value="{{ p.id }}">{{ p.title }} (₹{{ p.price }})</option>
+                                    {% endfor %}
+                                </select>
+                                <input type="number" name="discounted_prices[]" placeholder="Sale Price" class="input-field w-32">
+                                <button type="button" onclick="removeSaleProduct(this)" class="bg-rose-500/20 text-rose-400 px-3 rounded-xl">✕</button>
+                            </div>
+                        </div>
+                        <button type="button" onclick="addSaleProduct()" class="text-emerald-400 text-sm hover:text-emerald-300 mt-2">
+                            <i class="fa-solid fa-plus"></i> Add Another Product
+                        </button>
+                    </div>
+
+                    <button type="submit" class="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:brightness-110 text-slate-950 font-bold py-3 rounded-xl transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-fire"></i> Create Sale
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- ============================================ -->
+        <!-- TAB: ADD AD FORM -->
+        <!-- ============================================ -->
+        <!-- ============================================ -->
+<!-- TAB: ADS MANAGER (Add + List + Edit + Delete) -->
+<!-- ============================================ -->
+<div id="panel-add-ad" class="tab-panel hidden">
+    <div class="max-w-4xl mx-auto space-y-6">
+
+        <!-- ====== ADD FORM ====== -->
+        <div class="glass-card p-6 md:p-8 rounded-2xl border border-purple-500/20">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="w-12 h-12 rounded-2xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 text-xl">
+                    <i class="fa-solid fa-ad"></i>
+                </div>
+                <div>
+                    <h2 class="font-display text-2xl font-semibold text-white">Manage Ads</h2>
+                    <p class="text-xs text-slate-400">Add, edit ya delete — sab ek hi jagah</p>
+                </div>
+            </div>
+
+            <form action="/admin/add_ad" method="POST" enctype="multipart/form-data" class="space-y-4">
+
+                <!-- Title -->
+                <div>
+                    <label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Ad Title *</label>
+                    <input type="text" name="title" placeholder="e.g. Premium Seeds Available" required class="input-field">
+                </div>
+
+                <!-- Description -->
+                <div>
+                    <label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Description (optional)</label>
+                    <textarea name="description" rows="2" placeholder="Short description..." class="input-field resize-none"></textarea>
+                </div>
+
+                <!-- Link URL -->
+                <div>
+                    <label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Click karne pe kahan jaye? (optional)</label>
+                    <input type="url" name="link_url" placeholder="https://example.com" class="input-field">
+                </div>
+
+                <!-- Row: Position + Priority -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Kahan dikhana hai?</label>
+                        <select name="position" class="input-field">
+                            <option value="homepage">🏠 Homepage (upar)</option>
+                            <option value="sidebar">📌 Sidebar</option>
+                            <option value="popup">🎯 Popup</option>
+                            <option value="footer">⬇️ Footer</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Priority</label>
+                        <select name="priority" class="input-field">
+                            <option value="0">Normal</option>
+                            <option value="1">Medium</option>
+                            <option value="2">High</option>
+                            <option value="3">Premium ⭐</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Row: Start + End (optional) -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Start Date (optional)</label>
+                        <input type="datetime-local" name="start_date" class="input-field">
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">End Date (optional)</label>
+                        <input type="datetime-local" name="end_date" class="input-field">
+                    </div>
+                </div>
+
+                <!-- Media upload -->
+                <div>
+                    <label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Ad Image / Video *</label>
+                    <div class="file-input-wrapper">
+                        <div class="file-input-label">
+                            <i class="fa-solid fa-cloud-arrow-up text-purple-400"></i>
+                            <span id="ad-file-label">Choose image ya video</span>
+                        </div>
+                        <input type="file" name="media" accept="image/*,video/*" onchange="updateFileLabel(this, 'ad-file-label')">
+                    </div>
+                </div>
+
+                <!-- Submit -->
+                <button type="submit" class="w-full bg-gradient-to-r from-purple-500 to-fuchsia-600 hover:brightness-110 text-white font-bold py-3 rounded-xl transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>Create Ad</span>
+                </button>
+            </form>
+        </div>
+
+        <!-- ====== EXISTING ADS LIST ====== -->
+        <div class="glass-card p-6 md:p-8 rounded-2xl border border-purple-500/20">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="font-display text-lg font-semibold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-list text-purple-400"></i>
+                    Active Ads
+                    <span class="text-xs font-normal text-slate-400 bg-slate-800/50 px-2.5 py-0.5 rounded-full border border-purple-500/20">{{ ads|length if ads else 0 }}</span>
+                </h3>
+            </div>
+
+            {% if ads and ads|length > 0 %}
+            <div class="space-y-3">
+                {% for ad in ads %}
+                <div class="flex items-center gap-4 p-3 bg-slate-950/60 rounded-xl border border-slate-800 hover:border-purple-500/40 transition">
+
+                    <!-- Thumbnail -->
+                    <div class="w-16 h-16 rounded-lg overflow-hidden bg-slate-800 flex items-center justify-center shrink-0">
+                        {% if ad.media_url %}
+                            {% if ad.media_url.endswith('.mp4') or ad.media_url.endswith('.webm') %}
+                                <video src="/static/uploads/{{ ad.media_url }}" class="w-full h-full object-cover"></video>
+                            {% else %}
+                                <img src="/static/uploads/{{ ad.media_url }}" class="w-full h-full object-cover">
+                            {% endif %}
+                        {% else %}
+                            <i class="fa-solid fa-ad text-slate-600 text-xl"></i>
+                        {% endif %}
+                    </div>
+
+                    <!-- Info -->
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2 mb-1">
+                            <h4 class="text-white font-semibold text-sm truncate">{{ ad.title }}</h4>
+                            {% if ad.is_active %}
+                                <span class="text-[9px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full">ACTIVE</span>
+                            {% else %}
+                                <span class="text-[9px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30 px-2 py-0.5 rounded-full">INACTIVE</span>
+                            {% endif %}
+                        </div>
+                        <div class="flex flex-wrap gap-3 text-[10px] text-slate-400">
+                            <span><i class="fa-solid fa-location-dot text-purple-400"></i> {{ ad.position }}</span>
+                            <span><i class="fa-regular fa-eye text-blue-400"></i> {{ ad.views or 0 }} views</span>
+                            <span><i class="fa-solid fa-cursor text-emerald-400"></i> {{ ad.clicks or 0 }} clicks</span>
+                            {% if ad.priority > 0 %}
+                                <span class="text-amber-400">⭐ Priority {{ ad.priority }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="flex items-center gap-2 shrink-0">
+                        <!-- Toggle Active -->
+                        <a href="/admin/toggle_ad/{{ ad.id }}"
+                           class="w-9 h-9 rounded-lg flex items-center justify-center transition
+                                  {% if ad.is_active %} bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500 hover:text-white
+                                  {% else %} bg-slate-700/50 text-slate-400 hover:bg-slate-600 hover:text-white {% endif %}"
+                           title="{% if ad.is_active %}Deactivate{% else %}Activate{% endif %}">
+                            <i class="fa-solid {% if ad.is_active %}fa-toggle-on{% else %}fa-toggle-off{% endif %}"></i>
+                        </a>
+
+                        <!-- Edit -->
+                        <a href="/admin/edit_ad/{{ ad.id }}"
+                           class="w-9 h-9 rounded-lg bg-blue-500/15 text-blue-400 hover:bg-blue-500 hover:text-white flex items-center justify-center transition"
+                           title="Edit">
+                            <i class="fa-solid fa-pen"></i>
+                        </a>
+
+                        <!-- Delete -->
+                        <a href="/admin/delete_ad/{{ ad.id }}"
+                           onclick="return confirm('Pakka delete karna hai?')"
+                           class="w-9 h-9 rounded-lg bg-rose-500/15 text-rose-400 hover:bg-rose-500 hover:text-white flex items-center justify-center transition"
+                           title="Delete">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-12 text-slate-500">
+                <i class="fa-solid fa-ad text-4xl mb-3 text-slate-700"></i>
+                <p class="font-medium">Koi ad nahi hai abhi.</p>
+                <p class="text-xs mt-1">Upar wale form se apna pehla ad banayein.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+        <!-- ============================================ -->
+        <!-- TAB: ADD POST FORM -->
+        <!-- ============================================ -->
+        <div id="panel-add-post" class="tab-panel hidden">
+            <div class="glass-card glass-card-hover p-8 rounded-2xl max-w-2xl mx-auto">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 text-xl"><i class="fa-solid fa-newspaper"></i></div>
+                    <div><h2 class="font-display text-2xl font-semibold text-white">Post Update / Announcement</h2><p class="text-xs text-slate-400">Share news, tips, or success stories with farmers</p></div>
+                </div>
+                <form action="/blog/add" method="POST" enctype="multipart/form-data" class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div><label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Author Name *</label><input type="text" name="author_name" placeholder="e.g. Yogiraj Agri-Tech" required class="input-field" value="Yogiraj Agri-Tech"></div>
+                        <div><label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Post Title *</label><input type="text" name="title" placeholder="e.g. New Hybrid Seeds Arrived!" required class="input-field"></div>
+                    </div>
+                    <div><label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Content / Message *</label><textarea name="content" rows="4" placeholder="Share important updates, farming tips, or success stories..." required class="input-field resize-none"></textarea></div>
+                    <div><label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Rating</label>
+                        <select name="rating" class="input-field">
+                            <option value="5">⭐⭐⭐⭐⭐ (5/5) - Excellent</option>
+                            <option value="4">⭐⭐⭐⭐ (4/5) - Good</option>
+                            <option value="3">⭐⭐⭐ (3/5) - Average</option>
+                            <option value="2">⭐⭐ (2/5) - Below Average</option>
+                            <option value="1">⭐ (1/5) - Needs Improvement</option>
+                        </select>
+                    </div>
+                    <div><label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">YouTube Video Link</label><input type="url" name="youtube_url" placeholder="https://youtube.com/watch?v=..." class="input-field"></div>
+                    <div><label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Upload Image / Video</label>
+                        <div class="file-input-wrapper">
+                            <div class="file-input-label"><i class="fa-solid fa-cloud-arrow-up text-emerald-400"></i><span id="post-file-label">Choose file</span></div>
+                            <input type="file" name="media" accept="image/*,video/*" onchange="updateFileLabel(this, 'post-file-label')">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-primary flex items-center justify-center gap-2"><i class="fa-solid fa-pen-to-square"></i> Publish Post</button>
+                </form>
+                <div class="mt-4 p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/10">
+                    <p class="text-[10px] text-slate-400 flex items-center gap-2"><i class="fa-solid fa-info-circle text-emerald-400"></i>Posts appear instantly on the homepage for all visitors.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================ -->
+        <!-- TAB: ADD LAND RENTAL FORM -->
+        <!-- ============================================ -->
+        <div id="panel-add-land" class="tab-panel hidden">
+            <div class="glass-card glass-card-hover p-8 rounded-2xl max-w-2xl mx-auto">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 text-xl"><i class="fa-solid fa-handshake"></i></div>
+                    <div><h2 class="font-display text-2xl font-semibold text-white">Add Land for Rent</h2><p class="text-xs text-slate-400">List agricultural land for rental</p></div>
+                </div>
+
+                <form action="/admin/add_land_rental" method="POST" enctype="multipart/form-data" class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div><label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Land Title *</label><input type="text" name="title" placeholder="e.g. Prime Agricultural Land" required class="input-field"></div>
+                        <div><label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Location *</label><input type="text" name="location" placeholder="e.g. Himmatnagar, Sabarkantha" required class="input-field"></div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div><label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Area Size *</label><input type="number" step="0.01" name="area_size" placeholder="0" required class="input-field"></div>
+                        <div><label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Unit</label>
+                            <select name="area_unit" class="input-field">
+                                <option value="Vigha">Vigha</option>
+                                <option value="Acres">Acres</option>
+                                <option value="Hectare">Hectare</option>
+                                <option value="Bigha">Bigha</option>
+                            </select>
+                        </div>
+                        <div><label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Price *</label><input type="number" step="0.01" name="price" placeholder="0" required class="input-field"></div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div><label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Land Type</label>
+                            <select name="land_type" class="input-field">
+                                <option value="Agriculture">🌾 Agriculture</option>
+                                <option value="Commercial">🏗️ Commercial</option>
+                                <option value="Organic">🌿 Organic</option>
+                                <option value="Irrigated">💧 Irrigated</option>
+                                <option value="Dry Land">🏜️ Dry Land</option>
+                            </select>
+                        </div>
+                        <div><label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Soil Type</label>
+                            <select name="soil_type" class="input-field">
+                                <option value="Loamy">🟫 Loamy</option>
+                                <option value="Clay">🟤 Clay</option>
+                                <option value="Sandy">🟨 Sandy</option>
+                                <option value="Black">⬛ Black Soil</option>
+                                <option value="Red">🟥 Red Soil</option>
+                            </select>
+                        </div>
+                        <div><label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Water Availability</label>
+                            <select name="water_availability" class="input-field">
+                                <option value="Year-round">💧 Year-round</option>
+                                <option value="Seasonal">🌧️ Seasonal</option>
+                                <option value="Irrigation Available">🚿 Irrigation Available</option>
+                                <option value="Rain-fed">☔ Rain-fed</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div><label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Price Unit</label>
+                        <select name="price_unit" class="input-field">
+                            <option value="Per Year">Per Year</option>
+                            <option value="Per Month">Per Month</option>
+                            <option value="Per Season">Per Season</option>
+                            <option value="Per Crop Cycle">Per Crop Cycle</option>
+                        </select>
+                    </div>
+
+                    <div><label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Description</label>
+                        <textarea name="description" rows="3" placeholder="Describe the land, features, accessibility..." class="input-field resize-none"></textarea>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div><label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Contact Name</label><input type="text" name="contact_name" placeholder="Land Owner Name" class="input-field"></div>
+                        <div><label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Contact Phone</label><input type="text" name="contact_phone" placeholder="Phone Number" class="input-field"></div>
+                    </div>
+
+                    <div><label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">YouTube Video Link</label><input type="url" name="youtube_url" placeholder="https://youtube.com/watch?v=..." class="input-field"></div>
+
+                    <div><label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Upload Images / Video</label>
+                        <div class="file-input-wrapper">
+                            <div class="file-input-label"><i class="fa-solid fa-cloud-arrow-up text-emerald-400"></i><span id="land-file-label">Choose file</span></div>
+                            <input type="file" name="media" accept="image/*,video/*" onchange="updateFileLabel(this, 'land-file-label')">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-primary flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-plus"></i> List Land for Rent
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- ============================================ -->
+        <!-- TAB: PACKED FOODS -->
+        <!-- ============================================ -->
+        <div id="panel-packed-foods" class="tab-panel hidden">
+            <div class="glass-card glass-card-hover p-8 rounded-2xl max-w-4xl mx-auto border border-amber-500/20">
+                <div class="flex items-center justify-between mb-6">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 text-xl">
+                            <i class="fa-solid fa-bag-shopping"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-2xl font-bold text-white">🌾 Manage Packed Foods</h2>
+                            <p class="text-xs text-slate-400">Add Gehu, Bajra, and other packed grain items (English + Gujarati)</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Add Form -->
+                <form action="/admin/add_packed_food" method="POST" enctype="multipart/form-data" class="mb-10 p-5 bg-slate-900/50 rounded-2xl border border-amber-500/20">
+                    <h3 class="text-amber-400 font-bold mb-3 text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-plus-circle"></i> Add New Packed Item
+                    </h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Title (English) *</label>
+                            <input type="text" name="title_en" placeholder="e.g. Premium Wheat Flour" required class="w-full bg-slate-900 border border-amber-500/30 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-amber-400">
+                        </div>
+                        <div>
+                            <label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Title (ગુજરાતી) *</label>
+                            <input type="text" name="title_gu" placeholder="e.g. પ્રીમિયમ ઘઉંનો લોટ" required class="w-full bg-slate-900 border border-amber-500/30 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-amber-400">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Category (English)</label>
+                            <input type="text" name="category_en" placeholder="e.g. Grains, Flour" class="w-full bg-slate-900 border border-amber-500/30 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-amber-400">
+                        </div>
+                        <div>
+                            <label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Category (ગુજરાતી)</label>
+                            <input type="text" name="category_gu" placeholder="e.g. અનાજ, લોટ" class="w-full bg-slate-900 border border-amber-500/30 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-amber-400">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Price (₹) *</label>
+                            <input type="number" step="0.01" name="price" placeholder="0.00" required class="w-full bg-slate-900 border border-amber-500/30 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-amber-400">
+                        </div>
+                        <div>
+                            <label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Stock Quantity *</label>
+                            <input type="number" name="stock_qty" placeholder="0" required class="w-full bg-slate-900 border border-amber-500/30 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-amber-400">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Description (English)</label>
+                            <textarea name="description_en" rows="2" placeholder="Describe the product in English" class="w-full bg-slate-900 border border-amber-500/30 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-amber-400 resize-none"></textarea>
+                        </div>
+                        <div>
+                            <label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Description (ગુજરાતી)</label>
+                            <textarea name="description_gu" rows="2" placeholder="ગુજરાતીમાં ઉત્પાદન વર્ણન કરો" class="w-full bg-slate-900 border border-amber-500/30 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-amber-400 resize-none"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Product Image</label>
+                        <input type="file" name="media" accept="image/*" class="w-full bg-slate-900 border border-dashed border-amber-500/30 rounded-lg px-4 py-2 text-slate-400 text-sm focus:outline-none focus:border-amber-400 file:mr-3 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:bg-amber-500/20 file:text-amber-300">
+                    </div>
+
+                    <button type="submit" class="w-full bg-gradient-to-r from-amber-500 to-yellow-600 text-slate-950 font-bold py-2.5 rounded-xl text-sm hover:scale-105 transition">+ Add Packed Item</button>
+                </form>
+
+                <!-- Current Items List -->
+                <h3 class="text-white font-bold mb-3 text-sm">Current Packed Items</h3>
+                <div class="table-container">
+                    <table>
+                        <thead><tr><th>Image</th><th>Title (EN)</th><th>Title (GU)</th><th>Price</th><th>Stock</th><th class="text-right">Action</th></tr></thead>
+                        <tbody>
+                            {% for item in items %}
+                            <tr>
+                                <td>
+                                    {% if item.media_url %}
+                                    <img src="/static/uploads/{{ item.media_url }}" class="w-12 h-12 rounded-lg object-cover">
+                                    {% else %}
+                                    <div class="w-12 h-12 rounded-lg bg-slate-800 flex items-center justify-center text-slate-600 text-xs">No</div>
+                                    {% endif %}
+                                </td>
+                                <td class="font-semibold text-white">{{ item.title_en }}</td>
+                                <td class="text-slate-300">{{ item.title_gu }}</td>
+                                <td class="text-amber-400 font-bold">₹{{ item.price }}</td>
+                                <td>{{ item.stock_qty }}</td>
+                                <td class="text-right"><a href="/admin/delete_packed_food/{{ item.id }}" class="btn-danger" onclick="return confirm('Delete this item?')"><i class="fa-solid fa-trash-can mr-1"></i> Delete</a></td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="6" class="text-center py-8 text-slate-500">No items added yet.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================ -->
+<!-- TAB: WHATSAPP GROUPS -->
+<!-- ============================================ -->
+<div id="panel-whatsapp-groups" class="tab-panel hidden">
+    <div class="glass-card glass-card-hover p-8 rounded-2xl max-w-4xl mx-auto border border-emerald-500/20">
+        <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 text-xl">
+                    <i class="fa-solid fa-users"></i>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-bold text-white">📱 WhatsApp Groups</h2>
+                    <p class="text-xs text-slate-400">Manage Yogiraj Farmer Network community groups</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Form -->
+        <form action="/admin/add_whatsapp_group" method="POST" class="mb-10 p-5 bg-slate-900/50 rounded-2xl border border-amber-500/20">
+            <h3 class="text-amber-400 font-bold mb-3 text-sm flex items-center gap-2">
+                <i class="fa-solid fa-plus-circle"></i> Add New WhatsApp Group
+            </h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Group Name *</label>
+                    <input type="text" name="name" placeholder="e.g. Kharif Season Farmers" required class="w-full bg-slate-900 border border-amber-500/30 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-amber-400">
+                </div>
+                <div>
+                    <label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Category *</label>
+                    <select name="category" required class="w-full bg-slate-900 border border-amber-500/30 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-amber-400">
+                        <option value="">Select Category</option>
+                        <option value="Crop Season">🌾 Crop Season</option>
+                        <option value="Expert Session">🧑‍🏫 Expert Session</option>
+                        <option value="Govt Scheme">🏛️ Govt Scheme</option>
+                        <option value="General">🌱 General</option>
+                        <option value="Events">🎉 Events</option>
+                    </select>
+                </div>
+            </div>
+
+            <div>
+                <label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">WhatsApp Group Link *</label>
+                <input type="url" name="link" placeholder="https://chat.whatsapp.com/..." required class="w-full bg-slate-900 border border-amber-500/30 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-amber-400">
+            </div>
+
+            <div>
+                <label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Description</label>
+                <textarea name="description" rows="2" placeholder="Describe what this group is about..." class="w-full bg-slate-900 border border-amber-500/30 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-amber-400 resize-none"></textarea>
+            </div>
+
+            <button type="submit" class="w-full bg-gradient-to-r from-emerald-500 to-green-600 text-slate-950 font-bold py-2.5 rounded-xl text-sm hover:scale-105 transition">+ Add WhatsApp Group</button>
+        </form>
+
+        <!-- Current Groups List - FIXED -->
+        <h3 class="text-white font-bold mb-3 text-sm">Current Groups</h3>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th class="px-4 py-3 text-left text-emerald-300 font-semibold text-xs uppercase tracking-wider">Name</th>
+                        <th class="px-4 py-3 text-left text-emerald-300 font-semibold text-xs uppercase tracking-wider">Category</th>
+                        <th class="px-4 py-3 text-left text-emerald-300 font-semibold text-xs uppercase tracking-wider">Description</th>
+                        <th class="px-4 py-3 text-left text-emerald-300 font-semibold text-xs uppercase tracking-wider">Link</th>
+                        <th class="px-4 py-3 text-right text-emerald-300 font-semibold text-xs uppercase tracking-wider">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if groups and groups|length > 0 %}
+                        {% for group in groups %}
+                        <tr class="hover:bg-emerald-500/5 transition duration-200">
+                            <td class="px-4 py-3 font-semibold text-white">{{ group.name }}</td>
+                            <td class="px-4 py-3">
+                                <span class="inline-block px-2 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs">
+                                    {{ group.category }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3 text-slate-400 text-sm">{{ group.description or '-' }}</td>
+                            <td class="px-4 py-3">
+                                <a href="{{ group.link }}" target="_blank" class="inline-flex items-center gap-1.5 bg-emerald-500/10 hover:bg-emerald-500 text-emerald-400 hover:text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition">
+                                    <i class="fa-brands fa-whatsapp"></i> Join
+                                </a>
+                            </td>
+                            <td class="px-4 py-3 text-right">
+                                <a href="/admin/delete_whatsapp_group/{{ group.id }}" onclick="return confirm('Delete this group?')" class="inline-flex items-center gap-1.5 bg-rose-500/10 hover:bg-rose-500 text-rose-400 hover:text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition">
+                                    <i class="fa-solid fa-trash-can"></i> Delete
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="5" class="px-4 py-8 text-center text-slate-500">
+                                <div class="text-6xl mb-4 text-slate-700">📱</div>
+                                <p class="font-medium text-lg">No WhatsApp groups added yet.</p>
+                                <p class="text-sm text-slate-600 mt-1">Add your first community group above.</p>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+        <!-- ============================================ -->
+        <!-- ADD CATEGORY MODAL (POPUP) -->
+        <!-- ============================================ -->
+        <div id="categoryModal" class="hidden fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-center justify-center">
+            <div class="glass-card p-6 rounded-2xl max-w-sm w-full border border-amber-500/20 shadow-2xl">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-white font-bold text-lg">Add New Category</h3>
+                    <button onclick="closeCategoryModal()" class="text-slate-400 hover:text-white text-xl">✕</button>
+                </div>
+                <input type="text" id="newCategoryInput" placeholder="e.g. Spray Pump, Jatka, Silage" class="w-full bg-slate-950/80 border border-amber-500/30 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-amber-400 mb-4">
+                <button onclick="saveNewCategory()" class="w-full bg-gradient-to-r from-amber-500 to-yellow-600 text-slate-950 font-bold py-3 rounded-xl text-sm hover:scale-105 transition">+ Create & Select</button>
+            </div>
+        </div>
+
+    </div>
+    <!-- ============================================ -->
+<!-- TAB: AGRI NEWS (Admin Panel) -->
+<!-- ============================================ -->
+<div id="panel-agri-news" class="tab-panel hidden">
+    <div class="glass-card glass-card-hover p-8 rounded-2xl max-w-4xl mx-auto border border-emerald-500/20">
+        <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 text-xl">
+                    <i class="fa-solid fa-newspaper"></i>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-bold text-white">📰 Manage Agri News</h2>
+                    <p class="text-xs text-slate-400">Add news, tips, and articles for farmers</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Form -->
+        <form action="/admin/add_agri_news" method="POST" enctype="multipart/form-data" class="mb-10 p-5 bg-slate-900/50 rounded-2xl border border-emerald-500/20">
+            <h3 class="text-emerald-400 font-bold mb-3 text-sm flex items-center gap-2">
+                <i class="fa-solid fa-plus-circle"></i> Add New News / Tip
+            </h3>
+            <div class="space-y-4">
+                <div>
+                    <label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Title *</label>
+                    <input type="text" name="title" placeholder="e.g. Kharif Season Guide 2026" required class="w-full bg-slate-900 border border-emerald-500/30 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-emerald-400">
+                </div>
+                <div>
+                    <label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Content / Description *</label>
+                    <textarea name="content" rows="4" placeholder="Write the full news or tip here..." required class="w-full bg-slate-900 border border-emerald-500/30 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-emerald-400 resize-none"></textarea>
+                </div>
+                <div>
+                    <label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Link URL (Optional)</label>
+                    <input type="url" name="link_url" placeholder="https://example.com" class="w-full bg-slate-900 border border-emerald-500/30 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-emerald-400">
+                </div>
+                <div>
+                    <label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider">Upload Image</label>
+                    <input type="file" name="news_image" accept="image/*" class="w-full bg-slate-900 border border-dashed border-emerald-500/30 rounded-lg px-4 py-2 text-slate-400 text-sm focus:outline-none focus:border-emerald-400 file:mr-3 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:bg-emerald-500/20 file:text-emerald-300">
+                </div>
+                <button type="submit" class="w-full bg-gradient-to-r from-emerald-500 to-green-600 text-slate-950 font-bold py-2.5 rounded-xl text-sm hover:scale-105 transition">+ Add News</button>
+            </div>
+        </form>
+
+        <!-- Current News List -->
+        <h3 class="text-white font-bold mb-3 text-sm">Current News</h3>
+        <div class="table-container">
+            <table>
+                <thead><tr><th>Image</th><th>Title</th><th>Content</th><th>Action</th></tr></thead>
+                <tbody>
+                    {% for news in news_list %}
+                    <tr>
+                        <td>
+                            {% if news.image_url %}
+                            <img src="/static/uploads/{{ news.image_url }}" class="w-12 h-12 rounded-lg object-cover">
+                            {% else %}
+                            <div class="w-12 h-12 rounded-lg bg-slate-800 flex items-center justify-center text-slate-600 text-xs">No</div>
+                            {% endif %}
+                        </td>
+                        <td class="font-semibold text-white">{{ news.title }}</td>
+                        <td class="text-slate-400 text-xs truncate max-w-[200px]">{{ news.content }}</td>
+                        <td class="text-right"><a href="/admin/delete_agri_news/{{ news.id }}" class="btn-danger" onclick="return confirm('Delete this news?')"><i class="fa-solid fa-trash-can mr-1"></i> Delete</a></td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="4" class="text-center py-8 text-slate-500">No news added yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+    <script>
+        // ============================================
+        // CATEGORY MODAL LOGIC
+        // ============================================
+        function openCategoryModal() {
+            document.getElementById('categoryModal').classList.remove('hidden');
+        }
+
+        function closeCategoryModal() {
+            document.getElementById('categoryModal').classList.add('hidden');
+            document.getElementById('newCategoryInput').value = '';
+        }
+
+        async function saveNewCategory() {
+            const name = document.getElementById('newCategoryInput').value.trim();
+            if (!name) {
+                alert('Please enter a category name.');
+                return;
+            }
+
+            try {
+                const response = await fetch('/admin/add_category_ajax', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({name: name})
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    const select = document.getElementById('productCategorySelect');
+                    const option = document.createElement('option');
+                    option.value = data.name;
+                    option.textContent = data.name;
+                    option.selected = true;
+                    select.appendChild(option);
+                    closeCategoryModal();
+                    alert('✅ Category "' + data.name + '" created and selected!');
+                } else {
+                    alert('❌ Failed to create category.');
+                }
+            } catch (error) {
+                alert('❌ Network error. Please try again.');
+            }
+        }
+
+        document.getElementById('categoryModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeCategoryModal();
+            }
+        });
+
+        // ============================================
+        // TAB SWITCHING
+        // ============================================
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-panel').forEach(el => el.classList.add('hidden'));
+            const panel = document.getElementById('panel-' + tabId);
+            if (panel) panel.classList.remove('hidden');
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            const btn = document.getElementById('tab-' + tabId);
+            if (btn) btn.classList.add('active');
+            localStorage.setItem('adminActiveTab', tabId);
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedTab = localStorage.getItem('adminActiveTab') || 'products';
+            switchTab(savedTab);
+        });
+
+        // ============================================
+        // UTILITY FUNCTIONS
+        // ============================================
+        function updateFileLabel(input, labelId) {
+            const label = document.getElementById(labelId);
+            if (label && input.files && input.files.length > 0) {
+                label.textContent = input.files[0].name;
+            }
+        }
+
+        function updateMultiFileLabel(input, labelId) {
+            const label = document.getElementById(labelId);
+            if (label && input.files && input.files.length > 0) {
+                label.textContent = input.files.length + ' file(s) selected';
+            }
+        }
+
+        function filterTable(tableId, query) {
+            const table = document.getElementById(tableId);
+            if (!table) return;
+            const q = query.trim().toLowerCase();
+            table.querySelectorAll('tbody tr').forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(q) ? '' : 'none';
+            });
+        }
+
+        function addSaleProduct() {
+            const container = document.getElementById('sale-products-container');
+            const div = document.createElement('div');
+            div.className = 'flex gap-2 mt-2';
+            div.innerHTML = `
+                <select name="product_ids[]" class="input-field flex-1">
+                    <option value="">Select Product</option>
+                    {% for p in products %}
+                    <option value="{{ p.id }}">{{ p.title }} (₹{{ p.price }})</option>
+                    {% endfor %}
+                </select>
+                <input type="number" name="discounted_prices[]" placeholder="Sale Price" class="input-field w-32">
+                <button type="button" onclick="this.parentElement.remove()" class="bg-rose-500/20 text-rose-400 px-3 rounded-xl hover:bg-rose-500/30 transition">✕</button>
+            `;
+            container.appendChild(div);
+        }
+
+        function removeSaleProduct(btn) {
+            btn.parentElement.remove();
+        }
+    </script>
+
+</body>
+</html>

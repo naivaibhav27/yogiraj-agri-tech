@@ -1,0 +1,62 @@
+:root {
+    --agri-green: #1b5e20;
+    --agri-light-green: #2e7d32;
+    --agri-gold: #fbc02d;
+    --agri-dark: #1e293b;
+    --agri-card-bg: #ffffff;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f4f6f9;
+    color: #333;
+}
+
+/* Navbar Custom Styling */
+.bg-agri {
+    background: linear-gradient(135deg, #1b5e20 0%, #2e7d32 100%) !important;
+}
+
+.navbar-brand {
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+/* Feature Cards */
+.card-agri {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-agri:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+}
+
+/* Status Badges */
+.badge-ndvi-high { background-color: #1b5e20; color: #fff; }
+.badge-ndvi-med  { background-color: #ffee58; color: #000; }
+.badge-ndvi-low  { background-color: #b71c1c; color: #fff; }
+
+/* Voice Assistant Button */
+.voice-float-btn {
+    position: fixed;
+    bottom: 25px;
+    right: 25px;
+    z-index: 1050;
+    width: 65px;
+    height: 65px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #d32f2f, #f44336);
+    color: white;
+    border: none;
+    box-shadow: 0 6px 16px rgba(211, 47, 47, 0.4);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.voice-float-btn:hover {
+    transform: scale(1.08);
+}

@@ -1,0 +1,432 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+
+    <!-- Language Toggle -->
+    <div class="flex justify-end mb-4">
+        <button onclick="toggleLanguage()" class="flex items-center gap-2 bg-slate-800/50 hover:bg-slate-800 px-4 py-2 rounded-xl border border-slate-700/50 transition text-sm">
+            <i class="fa-solid fa-language text-emerald-400"></i>
+            <span id="langLabel">ગુજરાતી</span>
+            <span class="text-xs text-slate-500">|</span>
+            <span id="langToggle">EN</span>
+        </button>
+    </div>
+
+    <!-- Header -->
+    <div class="text-center mb-10">
+        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-emerald-500/20 to-green-500/20 border border-emerald-500/30 text-emerald-300 text-xs font-bold uppercase tracking-wider mb-3">
+            <i class="fa-solid fa-globe text-emerald-400"></i> <span id="headerBadge">Land Cover</span>
+        </div>
+        <h2 class="font-display text-4xl md:text-5xl font-semibold text-white mb-3">
+            <span class="bg-gradient-to-r from-emerald-400 via-teal-300 to-green-400 bg-clip-text text-transparent" id="headerTitle">🗺️ Your Land at a Glance</span>
+        </h2>
+        <p class="text-slate-400 text-base max-w-2xl mx-auto" id="headerDesc">
+            See exactly how your district's land is used — farms, forest, towns and more
+        </p>
+    </div>
+
+    <!-- District Picker -->
+    <div class="glass-card rounded-3xl p-6 md:p-8 border border-emerald-500/20">
+
+        <div class="flex flex-wrap items-end gap-4 mb-8">
+            <div class="flex-1 min-w-[180px]">
+                <label class="text-xs text-slate-400 block mb-1.5 font-semibold uppercase tracking-wider flex items-center gap-1.5">
+                    <i class="fa-solid fa-location-dot text-emerald-400"></i> <span id="districtLabel">District</span>
+                </label>
+                <select id="districtSelect" onchange="loadLandCover()" class="w-full bg-slate-950/80 border border-emerald-800/50 rounded-xl p-3 text-white text-sm focus:outline-none focus:border-emerald-400 transition">
+                    <option value="sabarkantha">🌾 Sabarkantha</option>
+                    <option value="aravalli">⛰️ Aravalli</option>
+                    <option value="mehsana">🌿 Mehsana</option>
+                    <option value="ahmedabad">🏙️ Ahmedabad</option>
+                    <option value="banaskantha">🌾 Banaskantha</option>
+                    <option value="kheda">🌾 Kheda</option>
+                    <option value="vadodara">🏙️ Vadodara</option>
+                    <option value="surat">🏙️ Surat</option>
+                    <option value="rajkot">🏙️ Rajkot</option>
+                </select>
+            </div>
+            <div class="flex-1 min-w-[120px]">
+                <button onclick="loadLandCover()" class="w-full bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 text-slate-950 font-bold px-6 py-3 rounded-xl transition-all duration-300 shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/40 flex items-center justify-center gap-2 group">
+                    <i class="fa-solid fa-satellite-dish group-hover:rotate-12 transition-transform"></i>
+                    <span id="exploreBtn">Show My Land</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2 mb-6">
+            <div class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
+            <span class="text-xs text-slate-500" id="districtName">Sabarkantha District, Gujarat</span>
+        </div>
+
+        <!-- ============================================= -->
+        <!-- PRIMARY VISUAL: ZAMEEN PATTI (land strip)      -->
+        <!-- The whole district drawn as one strip of land, -->
+        <!-- cut into pieces the same way a field is —      -->
+        <!-- no angles, no percentages to decode.            -->
+        <!-- ============================================= -->
+        <div class="mb-8">
+            <h3 class="font-display text-lg font-semibold text-white mb-1 flex items-center gap-2">
+                <i class="fa-solid fa-ruler-horizontal text-amber-300"></i>
+                <span id="stripTitle">Imagine your whole district as one strip of land</span>
+            </h3>
+            <p class="text-slate-400 text-sm mb-4" id="stripSubtitle">This strip is cut exactly the way your land actually is used</p>
+
+            <div id="landStrip" class="w-full h-16 md:h-20 rounded-2xl overflow-hidden flex border-2 border-emerald-900/40 shadow-inner"></div>
+            <div id="stripLegend" class="mt-4 flex flex-wrap gap-3"></div>
+        </div>
+
+        <!-- ============================================= -->
+        <!-- "OUT OF 10" CARDS — biggest categories only,   -->
+        <!-- phrased the way a farmer already thinks:       -->
+        <!-- fractions of a field, not percentages.         -->
+        <!-- ============================================= -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8" id="bigFactCards"></div>
+
+        <!-- Ranked list with large bars -->
+        <div class="bg-slate-950/80 border border-emerald-800/50 rounded-2xl p-5 mb-8">
+            <h4 class="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2 mb-4" id="topTitle">
+                <i class="fa-solid fa-ranking-star text-emerald-400"></i> Land Types, Biggest to Smallest
+            </h4>
+            <div id="topCategories" class="space-y-4"></div>
+        </div>
+
+        <!-- Full Breakdown (optional, for those who want every category) -->
+        <div class="mb-6">
+            <button onclick="toggleBreakdown()" class="w-full text-left bg-slate-900/50 hover:bg-slate-900 rounded-xl p-3 transition flex items-center justify-between group">
+                <span class="text-sm font-semibold text-slate-300 flex items-center gap-2" id="breakdownLabel">
+                    <i class="fa-solid fa-table-cells-large text-emerald-400"></i>
+                    <span id="breakdownTitle">See Every Land Type</span>
+                </span>
+                <span id="breakdownToggle" class="text-slate-400 group-hover:text-white transition">▼</span>
+            </button>
+            <div id="breakdownContainer" class="hidden mt-3 space-y-2"></div>
+        </div>
+
+        <!-- AI Insights -->
+        <div class="bg-gradient-to-r from-emerald-950/30 to-slate-950/30 border border-emerald-500/20 rounded-2xl p-5">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 animate-pulse">
+                    <i class="fa-solid fa-robot"></i>
+                </div>
+                <h4 class="text-white font-bold text-sm flex items-center gap-2" id="aiLabel">
+                    🤖 <span id="aiTitle">What This Means For You</span>
+                </h4>
+            </div>
+            <div id="aiInsights" class="text-slate-300 text-sm space-y-2">
+                <div class="flex items-start gap-3 animate-pulse">
+                    <span class="text-emerald-400">•</span>
+                    <span class="text-slate-400" id="aiLoading">Analyzing your land...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Technical details — moved out of the way, still available -->
+        <details class="mt-6 text-xs text-slate-500">
+            <summary class="cursor-pointer hover:text-slate-300 transition" id="techDetailsLabel">Technical details (data source)</summary>
+            <p class="mt-2 leading-relaxed" id="techDetailsBody">Satellite land cover data from ESRI / Impact Observatory, 10 meter resolution, 9 land cover classes.</p>
+        </details>
+    </div>
+</div>
+
+<script>
+// Language Translations
+const translations = {
+    en: {
+        headerBadge: 'Land Cover',
+        headerTitle: '🗺️ Your Land at a Glance',
+        headerDesc: "See exactly how your district's land is used — farms, forest, towns and more",
+        districtLabel: 'District',
+        exploreBtn: 'Show My Land',
+        stripTitle: 'Imagine your whole district as one strip of land',
+        stripSubtitle: 'This strip is cut exactly the way your land actually is used',
+        topTitle: 'Land Types, Biggest to Smallest',
+        breakdownTitle: 'See Every Land Type',
+        aiTitle: 'What This Means For You',
+        aiLoading: 'Analyzing your land...',
+        techDetailsLabel: 'Technical details (data source)',
+        techDetailsBody: 'Satellite land cover data from ESRI / Impact Observatory, 10 meter resolution, 9 land cover classes.',
+        outOf10: 'out of every 10 parts of land is',
+        totalAreaLabel: 'Total district size',
+        sqkm: 'sq. km'
+    },
+    gu: {
+        headerBadge: 'જમીન આવરણ',
+        headerTitle: '🗺️ તમારી જમીન એક નજરમાં',
+        headerDesc: 'તમારા જિલ્લાની જમીનનો ઉપયોગ કેવી રીતે થાય છે તે જુઓ — ખેતર, જંગલ, શહેર અને વધુ',
+        districtLabel: 'જિલ્લો',
+        exploreBtn: 'મારી જમીન બતાવો',
+        stripTitle: 'તમારા આખા જિલ્લાને એક જમીનની પટ્ટી તરીકે કલ્પના કરો',
+        stripSubtitle: 'આ પટ્ટી બરાબર એ જ રીતે કાપેલી છે જે રીતે તમારી જમીનનો ઉપયોગ થાય છે',
+        topTitle: 'જમીનના પ્રકારો, મોટાથી નાના',
+        breakdownTitle: 'દરેક જમીન પ્રકાર જુઓ',
+        aiTitle: 'આનો તમારા માટે શું અર્થ છે',
+        aiLoading: 'તમારી જમીનનું વિશ્લેષણ કરી રહ્યા છીએ...',
+        techDetailsLabel: 'તકનીકી વિગતો (ડેટા સ્ત્રોત)',
+        techDetailsBody: 'ESRI / Impact Observatory તરફથી સેટેલાઇટ જમીન આવરણ ડેટા, 10 મીટર રિઝોલ્યુશન, 9 જમીન આવરણ વર્ગો.',
+        outOf10: 'દર 10 ભાગમાંથી જમીનનો ભાગ છે',
+        totalAreaLabel: 'કુલ જિલ્લાનું કદ',
+        sqkm: 'ચો. કિમી'
+    }
+};
+
+let currentLang = 'en';
+let currentData = null;
+
+function toggleLanguage() {
+    currentLang = currentLang === 'en' ? 'gu' : 'en';
+    updateLanguage();
+    if (currentData) renderLandCover(currentData);
+    document.getElementById('langToggle').textContent = currentLang === 'en' ? 'GU' : 'EN';
+    document.getElementById('langLabel').textContent = currentLang === 'en' ? 'ગુજરાતી' : 'English';
+}
+
+function updateLanguage() {
+    const t = translations[currentLang];
+    document.getElementById('headerBadge').textContent = t.headerBadge;
+    document.getElementById('headerTitle').textContent = t.headerTitle;
+    document.getElementById('headerDesc').textContent = t.headerDesc;
+    document.getElementById('districtLabel').textContent = t.districtLabel;
+    document.getElementById('exploreBtn').textContent = t.exploreBtn;
+    document.getElementById('stripTitle').textContent = t.stripTitle;
+    document.getElementById('stripSubtitle').textContent = t.stripSubtitle;
+    document.getElementById('topTitle').textContent = t.topTitle;
+    document.getElementById('breakdownTitle').textContent = t.breakdownTitle;
+    document.getElementById('aiTitle').textContent = t.aiTitle;
+    document.getElementById('aiLoading').textContent = t.aiLoading;
+    document.getElementById('techDetailsLabel').textContent = t.techDetailsLabel;
+    document.getElementById('techDetailsBody').textContent = t.techDetailsBody;
+}
+
+function loadLandCover() {
+    const district = document.getElementById('districtSelect').value;
+    const lang = currentLang;
+
+    const districtNames = {
+        'sabarkantha': 'Sabarkantha District, Gujarat',
+        'aravalli': 'Aravalli District, Gujarat',
+        'mehsana': 'Mehsana District, Gujarat',
+        'ahmedabad': 'Ahmedabad District, Gujarat',
+        'banaskantha': 'Banaskantha District, Gujarat',
+        'kheda': 'Kheda District, Gujarat',
+        'vadodara': 'Vadodara District, Gujarat',
+        'surat': 'Surat District, Gujarat',
+        'rajkot': 'Rajkot District, Gujarat'
+    };
+    document.getElementById('districtName').textContent = districtNames[district] || 'Gujarat';
+
+    fetch(`/api/esri-landcover?district=${district}&lang=${lang}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                currentData = data.data;
+                renderLandCover(data.data);
+            } else {
+                showError(data.error || 'Failed to load data');
+            }
+        })
+        .catch(() => showError('Connection error. Please try again.'));
+}
+
+function renderLandCover(data) {
+    if (!data || !data.categories || data.categories.length === 0) {
+        showError('No land cover data available.');
+        return;
+    }
+    const sorted = [...data.categories].sort((a, b) => b.area - a.area);
+    renderLandStrip(sorted, data.total_area);
+    renderBigFactCards(sorted, data.total_area);
+    renderTopCategories(sorted, data.total_area);
+    renderFullBreakdown(sorted, data.total_area);
+    generateInsights(sorted, data.total_area);
+}
+
+// ---- Zameen Patti: one strip, cut proportionally, no angles/percent to decode ----
+function renderLandStrip(categories, total) {
+    const strip = document.getElementById('landStrip');
+    const legend = document.getElementById('stripLegend');
+    strip.innerHTML = '';
+    legend.innerHTML = '';
+
+    categories.forEach(cat => {
+        const pct = (cat.area / total) * 100;
+        const displayName = currentLang === 'gu' ? cat.name_gu : cat.name;
+
+        const seg = document.createElement('div');
+        seg.style.width = pct + '%';
+        seg.style.background = cat.color;
+        seg.style.minWidth = pct > 0 ? '2px' : '0';
+        seg.className = 'h-full flex items-center justify-center transition-all duration-700 relative group';
+        if (pct >= 8) {
+            seg.innerHTML = `<span class="text-[11px] md:text-sm font-bold text-slate-950/80 drop-shadow-sm">${cat.icon || ''}</span>`;
+        }
+        strip.appendChild(seg);
+
+        const chip = document.createElement('div');
+        chip.className = 'flex items-center gap-2 bg-slate-900/60 border border-slate-800/60 rounded-full px-3 py-1.5';
+        chip.innerHTML = `
+            <span class="w-3 h-3 rounded-full" style="background:${cat.color}"></span>
+            <span class="text-sm text-slate-200 font-medium">${cat.icon || ''} ${displayName}</span>
+            <span class="text-xs text-slate-400 font-mono">${pct.toFixed(1)}%</span>
+        `;
+        legend.appendChild(chip);
+    });
+}
+
+// ---- "Out of 10" cards for the 3 biggest land types — farmer-native fractions ----
+function renderBigFactCards(categories, total) {
+    const container = document.getElementById('bigFactCards');
+    const t = translations[currentLang];
+    const top3 = categories.slice(0, 3);
+
+    container.innerHTML = top3.map(cat => {
+        const pct = (cat.area / total) * 100;
+        const parts = Math.max(1, Math.round(pct / 10)); // out of 10
+        const displayName = currentLang === 'gu' ? cat.name_gu : cat.name;
+        const dots = Array.from({length: 10}, (_, i) =>
+            `<span class="w-3.5 h-3.5 rounded-sm" style="background:${i < parts ? cat.color : 'rgba(148,163,184,0.15)'}"></span>`
+        ).join('');
+
+        return `
+            <div class="glass-card rounded-2xl p-5 border border-emerald-500/10 hover:border-emerald-400/40 transition-all duration-300 hover:-translate-y-1">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="text-2xl">${cat.icon || '📍'}</span>
+                    <span class="text-white font-semibold text-sm">${displayName}</span>
+                </div>
+                <p class="font-display text-3xl font-semibold mb-1" style="color:${cat.color}">${parts} / 10</p>
+                <p class="text-[11px] text-slate-400 mb-3">${t.outOf10} ${displayName.toLowerCase()}</p>
+                <div class="flex gap-1">${dots}</div>
+            </div>
+        `;
+    }).join('');
+}
+
+function renderTopCategories(categories, total) {
+    const container = document.getElementById('topCategories');
+    const top = categories.slice(0, 6);
+
+    container.innerHTML = top.map((cat, index) => {
+        const percentage = ((cat.area / total) * 100).toFixed(1);
+        const displayName = currentLang === 'gu' ? cat.name_gu : cat.name;
+        return `
+            <div class="flex items-center gap-4">
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center text-lg font-bold shrink-0" style="background:${cat.color}20; color:${cat.color};">
+                    ${index + 1}
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex justify-between text-sm mb-1.5">
+                        <span class="text-slate-200 font-semibold truncate">${cat.icon || '📍'} ${displayName}</span>
+                        <span class="text-slate-300 font-mono font-semibold">${percentage}%</span>
+                    </div>
+                    <div class="w-full bg-slate-800/50 rounded-full h-3 overflow-hidden">
+                        <div class="h-3 rounded-full transition-all duration-1000" style="width:${percentage}%; background:${cat.color};"></div>
+                    </div>
+                </div>
+                <span class="text-xs text-slate-500 font-mono whitespace-nowrap shrink-0">${cat.area.toFixed(1)} km²</span>
+            </div>
+        `;
+    }).join('');
+}
+
+function renderFullBreakdown(categories, total) {
+    const container = document.getElementById('breakdownContainer');
+    container.innerHTML = categories.map(cat => {
+        const percentage = ((cat.area / total) * 100).toFixed(1);
+        const displayName = currentLang === 'gu' ? cat.name_gu : cat.name;
+        return `
+            <div class="flex items-center gap-3 p-3 rounded-xl bg-slate-900/30 hover:bg-slate-900/50 transition-all duration-300">
+                <div class="w-4 h-4 rounded-lg flex-shrink-0" style="background:${cat.color};"></div>
+                <div class="flex-1">
+                    <div class="flex justify-between text-sm">
+                        <span class="text-slate-300 font-medium">${cat.icon || '📍'} ${displayName}</span>
+                        <div class="flex items-center gap-3">
+                            <span class="text-slate-400 text-xs font-mono">${cat.area.toFixed(2)} km²</span>
+                            <span class="text-emerald-400 text-xs font-mono w-14 text-right">${percentage}%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function generateInsights(categories, total) {
+    const container = document.getElementById('aiInsights');
+    let insights = [];
+
+    const find = (matchFn) => categories.filter(c => matchFn(c.name.toLowerCase())).reduce((s, c) => s + c.area, 0);
+    const agri = find(n => n.includes('crop') || n === 'agriculture');
+    const forest = find(n => n.includes('tree') || n.includes('forest'));
+    const built = find(n => n.includes('built'));
+
+    const agriPercent = (agri / total * 100);
+    const forestPercent = (forest / total * 100);
+    const builtPercent = (built / total * 100);
+
+    const gu = currentLang === 'gu';
+
+    if (agriPercent > 50) {
+        insights.push(gu
+            ? `🌾 તમારો જિલ્લો મુખ્યત્વે ખેતીનો છે — <strong class="text-emerald-300">10 માંથી ${Math.round(agriPercent/10)} ભાગ</strong> ખેતરની જમીન છે.`
+            : `🌾 Your district is mostly farmland — <strong class="text-emerald-300">${Math.round(agriPercent/10)} out of every 10 parts</strong> is agricultural land.`);
+    } else if (agriPercent > 30) {
+        insights.push(gu
+            ? `🌿 મધ્યમ ખેતીની જમીન (<strong class="text-emerald-300">${agriPercent.toFixed(0)}%</strong>), મિશ્ર જમીન ઉપયોગ સાથે.`
+            : `🌿 Moderate farmland (<strong class="text-emerald-300">${agriPercent.toFixed(0)}%</strong>), mixed with other land uses.`);
+    } else {
+        insights.push(gu
+            ? `🏞️ ઓછી ખેતીની જમીન. બાગાયત અથવા પશુપાલન વિશે વિચારો.`
+            : `🏞️ Limited farmland here. Horticulture or animal husbandry may suit better.`);
+    }
+
+    if (forestPercent > 25) {
+        insights.push(gu
+            ? `🌳 સારું વન આવરણ (<strong class="text-emerald-300">${forestPercent.toFixed(0)}%</strong>) — જમીન અને પાણી માટે સારું.`
+            : `🌳 Good forest cover (<strong class="text-emerald-300">${forestPercent.toFixed(0)}%</strong>) — helps soil and water in your area.`);
+    } else if (forestPercent < 5) {
+        insights.push(gu
+            ? `⚠️ ઓછું વન આવરણ (<strong class="text-rose-300">${forestPercent.toFixed(0)}%</strong>) — વૃક્ષો વાવવાની ભલામણ.`
+            : `⚠️ Very little forest (<strong class="text-rose-300">${forestPercent.toFixed(0)}%</strong>) — planting more trees would help long-term.`);
+    }
+
+    if (builtPercent > 15) {
+        insights.push(gu
+            ? `🏙️ નોંધપાત્ર બાંધકામ (<strong class="text-rose-300">${builtPercent.toFixed(0)}%</strong>) — શહેરી વિસ્તાર વધી રહ્યો છે.`
+            : `🏙️ Noticeable built-up area (<strong class="text-rose-300">${builtPercent.toFixed(0)}%</strong>) — towns are expanding here.`);
+    }
+
+    container.innerHTML = insights.map(insight =>
+        `<div class="flex items-start gap-3 p-2 rounded-lg hover:bg-slate-900/30 transition-all duration-300">
+            <span class="text-emerald-400 mt-0.5">•</span>
+            <span class="text-slate-300 text-sm leading-relaxed">${insight}</span>
+        </div>`
+    ).join('');
+}
+
+function toggleBreakdown() {
+    const container = document.getElementById('breakdownContainer');
+    const toggle = document.getElementById('breakdownToggle');
+    container.classList.toggle('hidden');
+    toggle.textContent = container.classList.contains('hidden') ? '▼' : '▲';
+}
+
+function showError(message) {
+    const container = document.getElementById('aiInsights');
+    container.innerHTML = `
+        <div class="flex items-start gap-3 p-3 rounded-lg bg-rose-950/20 border border-rose-500/20">
+            <span class="text-rose-400 mt-0.5">⚠️</span>
+            <div>
+                <p class="text-rose-300 text-sm">${message}</p>
+                <p class="text-slate-400 text-xs mt-1">Please try again or select a different district.</p>
+            </div>
+        </div>
+    `;
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('langToggle').textContent = 'GU';
+    document.getElementById('langLabel').textContent = 'ગુજરાતી';
+    setTimeout(loadLandCover, 300);
+});
+</script>
+{% endblock %}

@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+
+    <!-- Header -->
+    <div class="text-center mb-10 relative">
+        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-orange-500/20 to-red-500/20 border border-orange-500/30 text-orange-300 text-xs font-bold uppercase tracking-wider mb-3 animate-pulse">
+            <i class="fa-solid fa-fire text-orange-400"></i> Limited Time Offers
+        </div>
+        <h2 class="font-display text-4xl md:text-6xl font-semibold text-white mb-3">
+            <span class="bg-gradient-to-r from-amber-300 via-orange-400 to-red-400 bg-clip-text text-transparent drop-shadow-[0_0_25px_rgba(251,146,60,0.35)]">🔥 Big Sale!</span>
+        </h2>
+        <p class="text-slate-400 text-base max-w-2xl mx-auto">
+            Don't miss out on our biggest seasonal offers. Grab it before the clock runs out.
+        </p>
+    </div>
+
+    {% if sales and sales|length > 0 %}
+        {% for sale in sales %}
+        <div class="relative rounded-3xl p-[1px] bg-gradient-to-br from-amber-400/40 via-orange-500/20 to-red-500/40 mb-10 shadow-2xl shadow-orange-500/10">
+        <div class="glass-card rounded-3xl p-6 md:p-8 border-0">
+
+            <!-- Sale Banner -->
+            <div class="relative rounded-2xl overflow-hidden mb-6 group">
+                {% if sale.banner_image %}
+                <img src="/static/uploads/{{ sale.banner_image }}" class="w-full h-52 md:h-72 object-cover transition-transform duration-700 group-hover:scale-105" alt="{{ sale.title }}">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent"></div>
+                {% else %}
+                <div class="w-full h-52 md:h-72 bg-gradient-to-br from-orange-600 via-red-600 to-rose-700 flex items-center justify-center relative overflow-hidden">
+                    <div class="absolute inset-0 opacity-20" style="background-image: repeating-linear-gradient(45deg, #fff 0 2px, transparent 2px 22px);"></div>
+                    <h2 class="font-display text-3xl md:text-5xl font-semibold text-white text-center px-4 drop-shadow-lg">{{ sale.title }}</h2>
+                </div>
+                {% endif %}
+
+                <!-- Diagonal discount ribbon -->
+                <div class="absolute -right-12 top-6 rotate-45 bg-gradient-to-r from-red-500 to-orange-500 text-white text-sm font-black px-14 py-1.5 shadow-lg shadow-red-900/40 tracking-wide">
+                    {{ sale.discount_percentage }}% OFF
+                </div>
+
+                <!-- Sale title over banner -->
+                <div class="absolute bottom-4 left-4 right-4">
+                    <h3 class="font-display text-2xl md:text-3xl font-semibold text-white drop-shadow-lg">{{ sale.title }}</h3>
+                </div>
+            </div>
+
+            <p class="text-slate-400 text-sm mb-6 max-w-2xl">{{ sale.description or 'Special offer on selected products!' }}</p>
+
+            <!-- Countdown — flip-clock style, this IS the urgency signal -->
+            <div class="flex items-center gap-2 mb-3">
+                <i class="fa-regular fa-clock text-amber-300 text-sm"></i>
+                <span class="text-[11px] uppercase tracking-widest text-amber-300/80 font-semibold">Offer ends in</span>
+            </div>
+            <div class="grid grid-cols-4 gap-2 md:gap-4 mb-8 max-w-md countdown-wrap" data-end="{{ sale.end_date }}">
+                <div class="bg-slate-950/80 border border-orange-500/25 rounded-xl md:rounded-2xl py-3 text-center">
+                    <p class="font-display text-2xl md:text-4xl font-semibold bg-gradient-to-b from-amber-200 to-orange-400 bg-clip-text text-transparent cd-days">00</p>
+                    <p class="text-[9px] md:text-[10px] uppercase tracking-widest text-slate-500 mt-1">Days</p>
+                </div>
+                <div class="bg-slate-950/80 border border-orange-500/25 rounded-xl md:rounded-2xl py-3 text-center">
+                    <p class="font-display text-2xl md:text-4xl font-semibold bg-gradient-to-b from-amber-200 to-orange-400 bg-clip-text text-transparent cd-hours">00</p>
+                    <p class="text-[9px] md:text-[10px] uppercase tracking-widest text-slate-500 mt-1">Hours</p>
+                </div>
+                <div class="bg-slate-950/80 border border-orange-500/25 rounded-xl md:rounded-2xl py-3 text-center">
+                    <p class="font-display text-2xl md:text-4xl font-semibold bg-gradient-to-b from-amber-200 to-orange-400 bg-clip-text text-transparent cd-mins">00</p>
+                    <p class="text-[9px] md:text-[10px] uppercase tracking-widest text-slate-500 mt-1">Mins</p>
+                </div>
+                <div class="bg-slate-950/80 border border-orange-500/25 rounded-xl md:rounded-2xl py-3 text-center">
+                    <p class="font-display text-2xl md:text-4xl font-semibold bg-gradient-to-b from-amber-200 to-orange-400 bg-clip-text text-transparent cd-secs">00</p>
+                    <p class="text-[9px] md:text-[10px] uppercase tracking-widest text-slate-500 mt-1">Secs</p>
+                </div>
+            </div>
+
+            <!-- Products Grid -->
+            {% if sale.products and sale.products|length > 0 %}
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                {% for product in sale.products %}
+                {% set final_price = product.discounted_price or (product.price * (1 - sale.discount_percentage/100))|round(2) %}
+                {% set savings = (product.price - final_price)|round(2) %}
+                <div class="relative bg-slate-900/60 rounded-2xl p-4 border border-orange-500/10 hover:border-amber-400/60 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl hover:shadow-orange-500/10 group/card overflow-hidden">
+                    <div class="absolute top-3 left-3 z-10 bg-red-500/90 text-white text-[10px] font-black px-2.5 py-1 rounded-full shadow-lg">
+                        -{{ sale.discount_percentage }}%
+                    </div>
+                    {% if product.media_url %}
+                    <div class="overflow-hidden rounded-xl mb-3">
+                        <img src="/static/uploads/{{ product.media_url }}" class="w-full h-40 object-cover transition-transform duration-500 group-hover/card:scale-110">
+                    </div>
+                    {% endif %}
+                    <h4 class="text-white font-semibold text-sm leading-snug mb-2">{{ product.title }}</h4>
+                    <div class="flex items-baseline gap-2 mb-1">
+                        <span class="font-display text-xl font-semibold text-amber-300">₹{{ final_price }}</span>
+                        <span class="text-slate-500 text-xs line-through">₹{{ product.price }}</span>
+                    </div>
+                    <p class="text-emerald-400 text-[11px] font-semibold mb-3">You save ₹{{ savings }}</p>
+                    <a href="https://wa.me/{{ admin_phone }}?text=I%20want%20to%20buy%20{{ product.title|urlencode }}" target="_blank" class="w-full bg-gradient-to-r from-amber-400 to-orange-500 hover:brightness-110 text-slate-950 font-bold py-2.5 rounded-xl text-sm flex items-center justify-center gap-2 transition shadow-lg shadow-orange-500/20">
+                        <i class="fa-brands fa-whatsapp"></i> Buy Now
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-slate-400 text-sm">No products added to this sale yet.</p>
+            {% endif %}
+        </div>
+        </div>
+        {% endfor %}
+    {% else %}
+    <div class="text-center py-16">
+        <div class="text-6xl mb-4">🛒</div>
+        <p class="text-slate-400 text-lg">No active sales right now.</p>
+        <p class="text-slate-500 text-sm mt-1">Check back soon for great offers!</p>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+// Countdown Timer — flip-clock style, four separate digit blocks
+document.querySelectorAll('.countdown-wrap').forEach(wrap => {
+    const endDate = new Date(wrap.dataset.end);
+    const daysEl = wrap.querySelector('.cd-days');
+    const hoursEl = wrap.querySelector('.cd-hours');
+    const minsEl = wrap.querySelector('.cd-mins');
+    const secsEl = wrap.querySelector('.cd-secs');
+
+    function pad(n) { return String(n).padStart(2, '0'); }
+
+    function updateCountdown() {
+        const diff = endDate - new Date();
+
+        if (diff <= 0) {
+            daysEl.textContent = hoursEl.textContent = minsEl.textContent = secsEl.textContent = '00';
+            wrap.parentElement.querySelector('.cd-days').closest('.grid') && (wrap.style.opacity = '0.4');
+            return;
+        }
+
+        daysEl.textContent = pad(Math.floor(diff / (1000 * 60 * 60 * 24)));
+        hoursEl.textContent = pad(Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)));
+        minsEl.textContent = pad(Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)));
+        secsEl.textContent = pad(Math.floor((diff % (1000 * 60)) / 1000));
+    }
+
+    updateCountdown();
+    setInterval(updateCountdown, 1000);
+});
+</script>
+{% endblock %}

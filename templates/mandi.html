@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+
+    <!-- Header -->
+    <div class="text-center mb-12 relative">
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-amber-500/20 blur-[100px] pointer-events-none -z-10"></div>
+        
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-bold uppercase tracking-wider mb-4">
+            <i class="fa-solid fa-store"></i> 🌾 Packed Grains & Flour
+        </div>
+        
+        <h2 class="font-display text-4xl md:text-5xl font-bold text-white mb-3">
+            <span class="bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-300 bg-clip-text text-transparent drop-shadow-[0_0_15px_rgba(251,191,36,0.2)]">
+                🌾 Packed Mandi & Grains
+            </span>
+        </h2>
+        <p class="text-slate-400 text-base max-w-2xl mx-auto">Premium quality packed grains, flour, and traditional foods from Sabarkantha. Available in Gujarati & English.</p>
+    </div>
+
+    <!-- Language Toggle -->
+    <div class="flex justify-end mb-6">
+        <button onclick="toggleLanguage()" class="flex items-center gap-2 bg-slate-800/50 hover:bg-slate-800 px-4 py-2 rounded-xl border border-slate-700/50 transition text-sm shadow-lg">
+            <i class="fa-solid fa-language text-amber-400"></i>
+            <span id="langLabel">ગુજરાતી</span>
+            <span class="text-xs text-slate-500">|</span>
+            <span id="langToggle">EN</span>
+        </button>
+    </div>
+
+    <!-- Products Grid -->
+    {% if items and items|length > 0 %}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for item in items %}
+        <!-- 🔥 FIXED: Clicking sends you directly to WhatsApp -->
+        <a href="https://wa.me/{{ admin_phone }}?text=Hello%20Yogiraj%20Agri-Tech%2C%20I%20want%20to%20buy%20{{ item.title_en|urlencode }}%20(₹{{ item.price }})" target="_blank" class="tilt-card glass-card rounded-2xl overflow-hidden hover:border-amber-400/50 transition duration-300 group hover:-translate-y-1 glow-gold border border-amber-500/20 relative cursor-pointer">
+            
+            <!-- Image -->
+            <div class="relative h-52 overflow-hidden bg-slate-900">
+                {% if item.media_url %}
+                <img src="/static/uploads/{{ item.media_url }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                {% else %}
+                <div class="w-full h-full bg-gradient-to-br from-amber-900/40 to-slate-800 flex items-center justify-center text-5xl text-amber-500/50">
+                    🌾
+                </div>
+                {% endif %}
+                
+                <!-- Stock Badge -->
+                {% if item.stock_qty > 0 %}
+                <div class="absolute top-3 left-3 bg-emerald-500/90 text-slate-950 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1.5 shadow-lg">
+                    <span class="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></span>
+                    In Stock
+                </div>
+                {% else %}
+                <div class="absolute top-3 left-3 bg-rose-500/90 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
+                    Out of Stock
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Content -->
+            <div class="p-5">
+                <div class="flex items-start justify-between mb-2">
+                    <h3 class="font-display text-lg font-bold text-white group-hover:text-amber-300 transition lang-en">{{ item.title_en }}</h3>
+                    <h3 class="font-display text-lg font-bold text-white group-hover:text-amber-300 transition lang-gu hidden">{{ item.title_gu }}</h3>
+                    <span class="text-xs text-slate-500">{{ item.category_en }}</span>
+                </div>
+                
+                <p class="text-slate-400 text-sm line-clamp-2 mb-3 lang-en">{{ item.description_en }}</p>
+                <p class="text-slate-400 text-sm line-clamp-2 mb-3 lang-gu hidden">{{ item.description_gu }}</p>
+                
+                <div class="flex items-center justify-between pt-4 border-t border-amber-900/30">
+                    <div>
+                        <span class="text-xs text-slate-400 block">Price</span>
+                        <span class="text-2xl font-black text-amber-400">₹{{ item.price }}</span>
+                        <span class="text-[10px] text-slate-500 block">Stock: {{ item.stock_qty }}</span>
+                    </div>
+                    <span class="px-4 py-2 bg-amber-500/10 text-amber-300 rounded-xl text-xs font-semibold border border-amber-500/30 group-hover:bg-amber-500/20 transition">
+                        <i class="fa-solid fa-whatsapp"></i> Order Now
+                    </span>
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-16">
+        <div class="text-6xl mb-4 text-slate-700">🌾</div>
+        <p class="text-slate-500">No packed items available yet.</p>
+        <p class="text-xs text-slate-600 mt-1">Admin can add products from the dashboard.</p>
+    </div>
+    {% endif %}
+
+</div>
+
+<script>
+let currentLang = 'en';
+
+function toggleLanguage() {
+    currentLang = currentLang === 'en' ? 'gu' : 'en';
+    document.querySelectorAll('.lang-en').forEach(el => {
+        el.classList.toggle('hidden', currentLang !== 'en');
+    });
+    document.querySelectorAll('.lang-gu').forEach(el => {
+        el.classList.toggle('hidden', currentLang !== 'gu');
+    });
+    document.getElementById('langToggle').textContent = currentLang === 'en' ? 'GU' : 'EN';
+    document.getElementById('langLabel').textContent = currentLang === 'en' ? 'ગુજરાતી' : 'English';
+}
+</script>
+{% endblock %}

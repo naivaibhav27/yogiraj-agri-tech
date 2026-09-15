@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-8">
+
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-8">
+        <div class="flex items-center gap-4">
+            <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-400 to-green-500 flex items-center justify-center text-slate-950 text-2xl shadow-lg shadow-emerald-500/20">
+                <i class="fa-solid fa-users"></i>
+            </div>
+            <div>
+                <h2 class="font-display text-2xl font-bold text-white">📱 WhatsApp Groups</h2>
+                <p class="text-xs text-slate-400 font-mono tracking-wide">Manage Yogiraj Farmer Network community groups</p>
+            </div>
+        </div>
+        <a href="/admin" class="flex items-center gap-2 bg-slate-800/50 hover:bg-slate-800 text-slate-400 hover:text-emerald-300 border border-slate-700/50 px-5 py-2.5 rounded-xl text-sm transition duration-300">
+            <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+
+    <!-- Premium Glassy Add Form -->
+    <div class="relative rounded-2xl p-[1px] bg-gradient-to-br from-emerald-400/30 via-green-500/10 to-emerald-400/20 shadow-lg shadow-emerald-900/10 mb-12">
+        <div class="glass-card rounded-2xl p-6 md:p-8 border-0 relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-emerald-400 to-transparent"></div>
+            
+            <div class="flex items-center gap-3 mb-6 border-b border-emerald-900/30 pb-4">
+                <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+                    <i class="fa-solid fa-plus-circle"></i>
+                </div>
+                <div>
+                    <h3 class="font-display text-lg font-semibold text-white">Add New WhatsApp Group</h3>
+                    <p class="text-xs text-slate-400">Connect farmers through dedicated community groups</p>
+                </div>
+            </div>
+            
+            <form action="/admin/add_whatsapp_group" method="POST" class="space-y-5">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Group Name *</label>
+                        <input type="text" name="name" placeholder="e.g. Kharif Season Farmers" required class="w-full bg-slate-950/80 border border-emerald-500/25 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/10 transition">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Category *</label>
+                        <select name="category" required class="w-full bg-slate-950/80 border border-emerald-500/25 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/10 transition">
+                            <option value="">Select Category</option>
+                            <option value="Crop Season">🌾 Crop Season</option>
+                            <option value="Expert Session">🧑‍🏫 Expert Session</option>
+                            <option value="Govt Scheme">🏛️ Govt Scheme</option>
+                            <option value="General">🌱 General</option>
+                            <option value="Events">🎉 Events</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">WhatsApp Group Link *</label>
+                    <input type="url" name="link" placeholder="https://chat.whatsapp.com/..." required class="w-full bg-slate-950/80 border border-emerald-500/25 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/10 transition">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Description</label>
+                    <textarea name="description" rows="2" placeholder="Describe what this group is about..." class="w-full bg-slate-950/80 border border-emerald-500/25 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/10 transition resize-none"></textarea>
+                </div>
+
+                <button type="submit" class="w-full bg-gradient-to-r from-emerald-500 to-green-600 hover:brightness-110 text-slate-950 font-bold py-4 rounded-2xl shadow-lg shadow-emerald-500/20 transition transform hover:scale-[1.01] flex items-center justify-center gap-2 text-sm">
+                    <i class="fa-solid fa-plus"></i> Add WhatsApp Group
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Premium Glassy Groups List -->
+    <div class="glass-card rounded-2xl p-6 md:p-8 border border-emerald-500/20">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="font-display text-lg font-semibold text-white flex items-center gap-3">
+                <i class="fa-solid fa-list text-emerald-400"></i> Active Groups
+                <span class="text-xs font-normal text-slate-400 bg-slate-800/50 px-3 py-1 rounded-full border border-emerald-500/20">({{ groups|length }})</span>
+            </h3>
+        </div>
+        
+        <div class="table-container border border-emerald-500/10 rounded-xl overflow-hidden bg-slate-950/40">
+            <table class="w-full">
+                <thead class="bg-emerald-950/20 border-b border-emerald-500/20">
+                    <tr>
+                        <th class="px-6 py-4 text-left text-emerald-300 font-semibold text-xs uppercase tracking-wider">Name</th>
+                        <th class="px-6 py-4 text-left text-emerald-300 font-semibold text-xs uppercase tracking-wider">Category</th>
+                        <th class="px-6 py-4 text-left text-emerald-300 font-semibold text-xs uppercase tracking-wider">Description</th>
+                        <th class="px-6 py-4 text-left text-emerald-300 font-semibold text-xs uppercase tracking-wider">Link</th>
+                        <th class="px-6 py-4 text-right text-emerald-300 font-semibold text-xs uppercase tracking-wider">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-emerald-500/10">
+                    {% for group in groups %}
+                    <tr class="hover:bg-emerald-500/5 transition duration-200">
+                        <td class="px-6 py-4 font-semibold text-white text-base">{{ group.name }}</td>
+                        <td class="px-6 py-4 text-slate-300 font-medium text-base">
+                            <span class="inline-block px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs">
+                                {{ group.category }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-slate-400 text-sm">{{ group.description }}</td>
+                        <td class="px-6 py-4">
+                            <a href="{{ group.link }}" target="_blank" class="inline-flex items-center gap-1.5 bg-emerald-500/10 hover:bg-emerald-500 text-emerald-400 hover:text-white px-4 py-2 rounded-lg text-xs font-semibold transition duration-200">
+                                <i class="fa-brands fa-whatsapp"></i> Join
+                            </a>
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            <a href="/admin/delete_whatsapp_group/{{ group.id }}" onclick="return confirm('Delete this group?')" class="inline-flex items-center gap-1.5 bg-rose-500/10 hover:bg-rose-500 text-rose-400 hover:text-white px-4 py-2 rounded-lg text-xs font-semibold transition duration-200">
+                                <i class="fa-solid fa-trash-can"></i> Delete
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="px-6 py-16 text-center text-slate-500">
+                            <div class="text-6xl mb-4 text-slate-700">📱</div>
+                            <p class="font-medium text-lg">No WhatsApp groups added yet.</p>
+                            <p class="text-sm text-slate-600 mt-1">Add your first community group above.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

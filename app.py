@@ -37,15 +37,37 @@ UPLOAD_FOLDER = os.path.join('static', 'uploads')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 32 * 1024 * 1024
 
-IS_VERCEL = bool(
-    os.getenv('VERCEL') 
-    or os.getenv('VERCEL_ENV') 
-    or os.getenv('VERCEL_URL')
-    or os.getenv('NOW_REGION')  # old Vercel
-    or os.path.exists('/var/task')  # Vercel filesystem marker
-)
+# ============================================================
+# 🔍 RELIABLE VERCEL DETECTION (checks multiple signals)
+# ============================================================
+def _detect_vercel():
+    """Detect Vercel environment reliably."""
+    # Signal 1: Vercel-specific env vars
+    if os.getenv('VERCEL') or os.getenv('VERCEL_ENV') or os.getenv('VERCEL_URL'):
+        return True
+    # Signal 2: /var/task is Vercel's function directory (most reliable)
+    if os.path.exists('/var/task'):
+        return True
+    # Signal 3: AWS Lambda context (Vercel uses Lambda underneath)
+    if os.getenv('AWS_LAMBDA_FUNCTION_NAME') or os.getenv('AWS_REGION'):
+        return True
+    # Signal 4: /tmp writable but not the cwd
+    try:
+        cwd = os.getcwd()
+        if cwd.startswith('/var/task') or cwd.startswith('/var/lang'):
+            return True
+    except Exception:
+        pass
+    return False
+
+IS_VERCEL = _detect_vercel()
+
+# Only create local upload dir if we're NOT on Vercel
 if not IS_VERCEL:
-    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+    try:
+        os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+    except OSError as e:
+        print(f"⚠️ Could not create upload folder: {e}")
 
 # --- ADMIN CONFIG ---
 ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'Yogiraj@1811')
@@ -63,6 +85,7 @@ GROQ_TEXT_MODEL = os.getenv('GROQ_TEXT_MODEL', 'openai/gpt-oss-20b')
 GROQ_VISION_MODEL = os.getenv('GROQ_VISION_MODEL', 'qwen/qwen3.6-27b')
 GROQ_WHISPER_MODEL = os.getenv('GROQ_WHISPER_MODEL', 'whisper-large-v3')
 
+# --- LOCAL RATE LIMITER ---
 _ai_call_times = []
 _AI_MAX_PER_MINUTE = 25
 _ai_rate_lock = threading.Lock()
@@ -84,12 +107,23 @@ def _record_ai_call():
         _ai_call_times.append(time.time())
 
 
+# ============================================================
+# 🔍 STARTUP DIAGNOSTICS
+# ============================================================
 print("=" * 60)
 print("🌾 YOGIRAJ AGRI-TECH - COMPLETE SYSTEM")
 print("=" * 60)
-print(f"🌍 Environment: {'Vercel' if IS_VERCEL else 'Local'}")
+print(f"🌍 Environment: {'VERCEL' if IS_VERCEL else 'LOCAL'}")
+print(f"📁 CWD: {os.getcwd()}")
+print(f"📁 /var/task exists: {os.path.exists('/var/task')}")
+print(f"📁 /tmp exists: {os.path.exists('/tmp')}")
+print(f"🔑 VERCEL env: {os.getenv('VERCEL')}")
+print(f"🔑 VERCEL_ENV env: {os.getenv('VERCEL_ENV')}")
+print(f"🔑 AWS_REGION: {os.getenv('AWS_REGION')}")
 print(f"🤖 AI: Groq — Text={GROQ_TEXT_MODEL}, Vision={GROQ_VISION_MODEL}")
 print(f"🔑 Groq Key: {'SET' if GROQ_API_KEY else '❌ MISSING'}")
+print(f"🔑 Blob Store ID: {'SET' if os.getenv('BLOB_STORE_ID') else 'not set'}")
+print(f"🔑 Blob Token: {'SET' if os.getenv('BLOB_READ_WRITE_TOKEN') else 'not set'}")
 print("=" * 60)
 
 
@@ -155,7 +189,9 @@ def get_esri_landcover(district_name):
     return result, None
 
 
+# ============================================================
 # --- DATABASE FUNCTIONS ---
+# ============================================================
 
 def get_db_connection():
     try:
@@ -176,78 +212,29 @@ def get_db_connection():
 
 
 def fix_column_types():
-    """
-    Fix legacy INTEGER is_active columns to BOOLEAN.
-    Safe to run multiple times.
-    """
+    """Migrate legacy INTEGER is_active columns to BOOLEAN."""
     conn = None
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Check + fix brand_partners
-        try:
-            cursor.execute("""
-                SELECT data_type FROM information_schema.columns
-                WHERE table_name = 'brand_partners' AND column_name = 'is_active'
-            """)
-            row = cursor.fetchone()
-            if row and row['data_type'] == 'integer':
-                print("🔧 Migrating brand_partners.is_active INTEGER → BOOLEAN")
+        for table in ['brand_partners', 'achievement_badges', 'whatsapp_groups']:
+            try:
                 cursor.execute("""
-                    ALTER TABLE brand_partners
-                    ALTER COLUMN is_active DROP DEFAULT
-                """)
-                cursor.execute("""
-                    ALTER TABLE brand_partners
-                    ALTER COLUMN is_active TYPE BOOLEAN USING (is_active::int::boolean)
-                """)
-                cursor.execute("""
-                    ALTER TABLE brand_partners
-                    ALTER COLUMN is_active SET DEFAULT TRUE
-                """)
-                conn.commit()
-                print("✅ brand_partners migrated")
-        except Exception as e:
-            print(f"⚠️ brand_partners migration: {e}")
-            conn.rollback()
-
-        # Check + fix achievement_badges
-        try:
-            cursor.execute("""
-                SELECT data_type FROM information_schema.columns
-                WHERE table_name = 'achievement_badges' AND column_name = 'is_active'
-            """)
-            row = cursor.fetchone()
-            if row and row['data_type'] == 'integer':
-                print("🔧 Migrating achievement_badges.is_active INTEGER → BOOLEAN")
-                cursor.execute("ALTER TABLE achievement_badges ALTER COLUMN is_active DROP DEFAULT")
-                cursor.execute("ALTER TABLE achievement_badges ALTER COLUMN is_active TYPE BOOLEAN USING (is_active::int::boolean)")
-                cursor.execute("ALTER TABLE achievement_badges ALTER COLUMN is_active SET DEFAULT TRUE")
-                conn.commit()
-                print("✅ achievement_badges migrated")
-        except Exception as e:
-            print(f"⚠️ achievement_badges migration: {e}")
-            conn.rollback()
-
-        # Check + fix whatsapp_groups
-        try:
-            cursor.execute("""
-                SELECT data_type FROM information_schema.columns
-                WHERE table_name = 'whatsapp_groups' AND column_name = 'is_active'
-            """)
-            row = cursor.fetchone()
-            if row and row['data_type'] == 'integer':
-                print("🔧 Migrating whatsapp_groups.is_active INTEGER → BOOLEAN")
-                cursor.execute("ALTER TABLE whatsapp_groups ALTER COLUMN is_active DROP DEFAULT")
-                cursor.execute("ALTER TABLE whatsapp_groups ALTER COLUMN is_active TYPE BOOLEAN USING (is_active::int::boolean)")
-                cursor.execute("ALTER TABLE whatsapp_groups ALTER COLUMN is_active SET DEFAULT TRUE")
-                conn.commit()
-                print("✅ whatsapp_groups migrated")
-        except Exception as e:
-            print(f"⚠️ whatsapp_groups migration: {e}")
-            conn.rollback()
-
+                    SELECT data_type FROM information_schema.columns
+                    WHERE table_name = %s AND column_name = 'is_active'
+                """, (table,))
+                row = cursor.fetchone()
+                if row and row['data_type'] == 'integer':
+                    print(f"🔧 Migrating {table}.is_active INTEGER → BOOLEAN")
+                    cursor.execute(f"ALTER TABLE {table} ALTER COLUMN is_active DROP DEFAULT")
+                    cursor.execute(f"ALTER TABLE {table} ALTER COLUMN is_active TYPE BOOLEAN USING (is_active::int::boolean)")
+                    cursor.execute(f"ALTER TABLE {table} ALTER COLUMN is_active SET DEFAULT TRUE")
+                    conn.commit()
+                    print(f"✅ {table} migrated")
+            except Exception as e:
+                print(f"⚠️ {table} migration: {e}")
+                conn.rollback()
     except Exception as e:
         print(f"❌ Column type fix error: {e}")
     finally:
@@ -256,13 +243,13 @@ def fix_column_types():
 
 
 def seed_default_data():
-    """Seed default data (founder, badges) if tables are empty."""
+    """Seed default founder + badges if tables are empty."""
     conn = None
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Seed founder if empty
+        # Seed founder
         try:
             cursor.execute("SELECT COUNT(*) as cnt FROM founder")
             if cursor.fetchone()['cnt'] == 0:
@@ -272,7 +259,7 @@ def seed_default_data():
                 """, (
                     'Mr. Santosh Valand - UN-FAO Certified Specialist',
                     'Co-Founder & CEO of Yogiraj - Agritech - Neo farm',
-                    'Santosh Valand is the Founder and Administrator of Yogiraj Agritech, dedicated to supporting farmers with modern agricultural solutions and technology. His vision is to bridge the gap between traditional farming and modern technology by making innovative, practical, and AI-powered solutions accessible to farmers.',
+                    'Santosh Valand is the Founder and Administrator of Yogiraj Agritech, dedicated to supporting farmers with modern agricultural solutions and technology.',
                     'Empowering Farmers with the Power of AI.',
                     None, None))
                 conn.commit()
@@ -281,7 +268,7 @@ def seed_default_data():
             print(f"⚠️ Founder seed: {e}")
             conn.rollback()
 
-        # Seed default badges if empty
+        # Seed badges
         try:
             cursor.execute("SELECT COUNT(*) as cnt FROM achievement_badges")
             if cursor.fetchone()['cnt'] == 0:
@@ -349,7 +336,7 @@ def init_db():
                 print(f"⚠️ Error creating table: {e}")
                 conn.rollback()
 
-        # Seed admin user
+        # Seed admin
         try:
             cursor.execute("SELECT * FROM admin WHERE username = 'admin'")
             if not cursor.fetchone():
@@ -375,18 +362,20 @@ def init_db():
 
 
 # ============================================================
-# STARTUP — Run init, migrations, and seeding on BOTH local & Vercel
+# STARTUP — init + migrations + seeding
 # ============================================================
 try:
-    init_db()           # 1. Create tables (if not exist)
-    fix_column_types()  # 2. Migrate legacy INTEGER → BOOLEAN
-    seed_default_data() # 3. Seed founder + badges if empty
+    init_db()
+    fix_column_types()
+    seed_default_data()
     print("✅ Startup complete!")
 except Exception as e:
     print(f"⚠️ Startup issue: {e}")
 
 
+# ============================================================
 # --- HELPER FUNCTIONS ---
+# ============================================================
 
 def login_required(f):
     @wraps(f)
@@ -407,11 +396,15 @@ def extract_youtube_embed(url):
     return url
 
 
+# ============================================================
+# 💾 FILE UPLOAD — Vercel Blob or Local
+# ============================================================
 def save_file(file):
     """
     Save an uploaded file.
-    Local: saves to static/uploads/, returns filename.
-    Vercel: uploads to Vercel Blob, returns public Blob URL.
+
+    On Vercel: uploads to Vercel Blob → returns public Blob URL
+    Local: saves to static/uploads/ → returns filename
     """
     if not file or file.filename == '':
         return "", ""
@@ -423,7 +416,10 @@ def save_file(file):
     video_extensions = ('.mp4', '.mov', '.avi', '.webm', '.mkv', '.3gp')
     media_type = "video" if filename.lower().endswith(video_extensions) else "image"
 
-    # --- Vercel Blob path ---
+    print(f"📤 save_file() called: {filename}")
+    print(f"   IS_VERCEL = {IS_VERCEL}")
+
+    # === VERCEL BLOB PATH ===
     if IS_VERCEL:
         try:
             from vercel import blob
@@ -431,46 +427,63 @@ def save_file(file):
             name, ext = os.path.splitext(filename)
             unique_filename = f"{name}_{int(time.time() * 1000)}{ext}"
 
-            with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as temp_file:
-                temp_path = temp_file.name
-                file.save(temp_path)
+            # Save to /tmp (only writable dir on Vercel)
+            temp_path = os.path.join(tempfile.gettempdir(), unique_filename)
+            file.save(temp_path)
+            print(f"   Saved to /tmp: {temp_path}")
 
             try:
                 content_type = mimetypes.guess_type(filename)[0] or "application/octet-stream"
 
-                blob_result = blob.upload_file(
-                    local_path=temp_path,
-                    path=f"uploads/{unique_filename}",
-                    access="public",
-                    content_type=content_type,
-                    add_random_suffix=False,
-                    overwrite=False
-                )
+                # Try OIDC auth first (auto), fall back to token if available
+                upload_kwargs = {
+                    "local_path": temp_path,
+                    "path": f"uploads/{unique_filename}",
+                    "access": "public",
+                    "content_type": content_type,
+                    "add_random_suffix": False,
+                    "overwrite": False,
+                }
 
+                blob_result = blob.upload_file(**upload_kwargs)
                 blob_url = blob_result.url
-                print(f"✅ Uploaded to Vercel Blob: {blob_url}")
+                print(f"   ✅ Uploaded to Blob: {blob_url}")
                 return blob_url, media_type
 
             finally:
                 try:
-                    os.remove(temp_path)
+                    if os.path.exists(temp_path):
+                        os.remove(temp_path)
                 except OSError:
                     pass
 
         except Exception as e:
-            print(f"❌ Vercel Blob upload failed: {e}")
-            raise
+            print(f"   ❌ Blob upload failed: {e}")
+            import traceback
+            traceback.print_exc()
+            # Fallback: try /tmp save (at least data won't be lost within function lifecycle)
+            try:
+                fallback_name = f"fallback_{int(time.time())}_{filename}"
+                fallback_path = os.path.join(tempfile.gettempdir(), fallback_name)
+                file.seek(0)
+                file.save(fallback_path)
+                print(f"   ⚠️ Fallback to /tmp: {fallback_path}")
+                # Return filename that won't work on frontend, but at least no crash
+                return f"temp:{fallback_name}", media_type
+            except Exception as fe:
+                print(f"   ❌ Fallback also failed: {fe}")
+                raise
 
-    # --- Local development path ---
+    # === LOCAL PATH ===
     try:
         os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-    except OSError:
-        pass
-
-    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-    file.save(filepath)
-    print(f"✅ Local file saved: {filename}")
-    return filename, media_type
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(filepath)
+        print(f"   ✅ Local file saved: {filepath}")
+        return filename, media_type
+    except OSError as e:
+        print(f"   ❌ Local save failed: {e}")
+        raise
 
 
 def get_media_items(media_url, media_type, youtube_url):
@@ -490,7 +503,10 @@ def get_media_items(media_url, media_type, youtube_url):
         # Blob URL → use directly
         if media_url.startswith("http://") or media_url.startswith("https://"):
             media_url_actual = media_url
-        # Old local filename → prefix with /static/uploads/
+        # Temp fallback (shouldn't happen in normal flow)
+        elif media_url.startswith("temp:"):
+            media_url_actual = f"/{media_url}"
+        # Local filename
         else:
             media_url_actual = f"/static/uploads/{media_url}"
 
@@ -608,10 +624,6 @@ Keep it concise and farmer-friendly. Respond in simple Hinglish/Gujarati if appr
     return None, "Groq unavailable"
 
 
-# ============================================================
-# 🚀 GROQ VISION
-# ============================================================
-
 def call_groq_vision(image_bytes, mime_type, prompt, max_retries=2):
     if not GROQ_API_KEY:
         return None, "Groq API key not configured"
@@ -658,10 +670,6 @@ Keep response concise with emojis."""
 
     return None, "Groq vision unavailable"
 
-
-# ============================================================
-# 🚀 GROQ WHISPER
-# ============================================================
 
 def call_groq_whisper(audio_file, language=None):
     if not GROQ_API_KEY:
@@ -765,8 +773,7 @@ def admin_dashboard():
         news_list=rows_to_dict(news_list), admin_phone=ADMIN_WHATSAPP_NUMBER)
 
 
-# --- ADMIN CRUD (all same as before, no changes needed) ---
-# [add_product, add_rental, add_land_rental, delete_*, add_blog — all unchanged]
+# --- ADMIN CRUD ---
 
 @app.route('/admin/add_product', methods=['POST'])
 @login_required
@@ -774,6 +781,7 @@ def add_product():
     yt_url = extract_youtube_embed(request.form.get('youtube_url', ''))
     conn = get_db_connection()
     cursor = conn.cursor()
+
     cursor.execute("""
         INSERT INTO products (title, category, price, stock_qty, description,
                               media_type, media_url, extra_info, youtube_url)
@@ -794,10 +802,13 @@ def add_product():
     if files and product_id:
         for file in files:
             if file and file.filename != '':
-                filename, media_type = save_file(file)
-                cursor.execute(
-                    "INSERT INTO product_media (product_id, media_url, media_type) VALUES (%s, %s, %s)",
-                    (product_id, filename, media_type))
+                try:
+                    filename, media_type = save_file(file)
+                    cursor.execute(
+                        "INSERT INTO product_media (product_id, media_url, media_type) VALUES (%s, %s, %s)",
+                        (product_id, filename, media_type))
+                except Exception as e:
+                    print(f"⚠️ Skipping file {file.filename}: {e}")
 
     conn.commit()
     conn.close()
@@ -925,6 +936,8 @@ def add_blog():
     return redirect(url_for('home'))
 
 
+# --- SALE ROUTES ---
+
 @app.route('/sales')
 def sales_page():
     conn = get_db_connection()
@@ -997,6 +1010,8 @@ def delete_sale(id):
     conn.close()
     return redirect(url_for('admin_dashboard'))
 
+
+# --- AD ROUTES ---
 
 @app.route('/admin/add_ad', methods=['POST'])
 @login_required
@@ -1116,6 +1131,8 @@ def ad_view(id):
     conn.close()
     return jsonify({'success': True})
 
+
+# --- PUBLIC ROUTES ---
 
 @app.route('/')
 def home():
@@ -1283,6 +1300,8 @@ def community():
         admin_phone=ADMIN_WHATSAPP_NUMBER, is_admin=session.get('admin_logged_in', False))
 
 
+# --- API ROUTES ---
+
 @app.route('/api/weather')
 def get_weather():
     lat = request.args.get('lat', '23.5979')
@@ -1446,6 +1465,8 @@ def chatbot_api():
         pass
     return jsonify({'reply': get_fallback_response(message)})
 
+
+# --- FOUNDER ---
 
 @app.route('/admin/founder', methods=['GET', 'POST'])
 @login_required

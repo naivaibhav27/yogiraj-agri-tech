@@ -68,3 +68,5 @@ migrate_to_postgres.py
 test_email.py
 test_mistral.py
 test_postgres.py
+.vercel
+.env*

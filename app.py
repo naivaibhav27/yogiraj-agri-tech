@@ -14,6 +14,8 @@ from datetime import datetime, timedelta
 from io import BytesIO
 import threading
 import random
+import tempfile
+import mimetypes
 
 from dotenv import load_dotenv
 
@@ -34,14 +36,23 @@ DB_PORT = os.getenv('DB_PORT', '5432')
 UPLOAD_FOLDER = os.path.join('static', 'uploads')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 32 * 1024 * 1024
-os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+IS_VERCEL = bool(
+    os.getenv('VERCEL') 
+    or os.getenv('VERCEL_ENV') 
+    or os.getenv('VERCEL_URL')
+    or os.getenv('NOW_REGION')  # old Vercel
+    or os.path.exists('/var/task')  # Vercel filesystem marker
+)
+if not IS_VERCEL:
+    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 # --- ADMIN CONFIG ---
 ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'Yogiraj@1811')
 ADMIN_WHATSAPP_NUMBER = os.getenv('ADMIN_WHATSAPP_NUMBER', '919974120442')
 
 # ============================================================
-# 🚀 GROQ AI CONFIGURATION (Text + Vision + Voice — all-in-one)
+# 🚀 GROQ AI CONFIGURATION
 # ============================================================
 GROQ_API_KEY = os.getenv('GROQ_API_KEY', '')
 GROQ_BASE_URL = "https://api.groq.com/openai/v1"
@@ -52,7 +63,6 @@ GROQ_TEXT_MODEL = os.getenv('GROQ_TEXT_MODEL', 'openai/gpt-oss-20b')
 GROQ_VISION_MODEL = os.getenv('GROQ_VISION_MODEL', 'qwen/qwen3.6-27b')
 GROQ_WHISPER_MODEL = os.getenv('GROQ_WHISPER_MODEL', 'whisper-large-v3')
 
-# --- LOCAL RATE LIMITER ---
 _ai_call_times = []
 _AI_MAX_PER_MINUTE = 25
 _ai_rate_lock = threading.Lock()
@@ -75,14 +85,13 @@ def _record_ai_call():
 
 
 print("=" * 60)
-print("🌾 YOGIRAJ AGRI-TECH - COMPLETE SYSTEM (PostgreSQL)")
+print("🌾 YOGIRAJ AGRI-TECH - COMPLETE SYSTEM")
 print("=" * 60)
-print("✅ PostgreSQL Database Connected!")
-print(f"🔑 Admin Password: {ADMIN_PASSWORD[:3]}***")
-print(f"🤖 AI: Groq — Text={GROQ_TEXT_MODEL}, Vision={GROQ_VISION_MODEL}, Voice={GROQ_WHISPER_MODEL}")
+print(f"🌍 Environment: {'Vercel' if IS_VERCEL else 'Local'}")
+print(f"🤖 AI: Groq — Text={GROQ_TEXT_MODEL}, Vision={GROQ_VISION_MODEL}")
 print(f"🔑 Groq Key: {'SET' if GROQ_API_KEY else '❌ MISSING'}")
-print("🌤️ Weather: Open-Meteo (Free, No API Key)")
 print("=" * 60)
+
 
 # --- ESRI LAND COVER CLASS MAPPING ---
 LAND_COVER_CLASSES = {
@@ -97,75 +106,34 @@ LAND_COVER_CLASSES = {
     11: {'name': 'Rangeland', 'name_gu': 'ચરાઈ જમીન', 'color': '#C6AD8D', 'icon': '🌿', 'description': 'Grassland/Shrubs'}
 }
 
-# --- GUJARAT DISTRICT DATA ---
 GUJARAT_DISTRICTS = {
-    "sabarkantha": {
-        "name": "Sabarkantha", "name_gu": "સાબરકાંઠા",
-        "lat": 23.5979, "lon": 72.9698,
-        "land_cover": {"Crops": 168.5, "Trees": 120.8, "Built Area": 45.2,
-                       "Bare Ground": 15.2, "Water": 8.5, "Rangeland": 22.3}
-    },
-    "aravalli": {
-        "name": "Aravalli", "name_gu": "અરવલ્લી",
-        "lat": 23.7179, "lon": 73.0198,
-        "land_cover": {"Crops": 125.3, "Trees": 95.6, "Built Area": 32.1,
-                       "Bare Ground": 12.8, "Water": 6.2, "Rangeland": 15.5}
-    },
-    "mehsana": {
-        "name": "Mehsana", "name_gu": "મહેસાણા",
-        "lat": 23.5979, "lon": 72.9698,
-        "land_cover": {"Crops": 210.2, "Trees": 25.6, "Built Area": 38.5,
-                       "Bare Ground": 18.5, "Water": 4.2, "Rangeland": 8.0}
-    },
-    "ahmedabad": {
-        "name": "Ahmedabad", "name_gu": "અમદાવાદ",
-        "lat": 23.0225, "lon": 72.5714,
-        "land_cover": {"Crops": 185.3, "Trees": 15.6, "Built Area": 85.2,
-                       "Bare Ground": 12.5, "Water": 6.8, "Rangeland": 4.0}
-    },
-    "banaskantha": {
-        "name": "Banaskantha", "name_gu": "બનાસકાંઠા",
-        "lat": 24.3000, "lon": 72.5000,
-        "land_cover": {"Crops": 195.8, "Trees": 18.2, "Built Area": 28.5,
-                       "Bare Ground": 22.5, "Water": 5.2, "Rangeland": 12.0}
-    },
-    "kheda": {
-        "name": "Kheda", "name_gu": "ખેડા",
-        "lat": 22.7500, "lon": 72.6833,
-        "land_cover": {"Crops": 178.5, "Trees": 12.5, "Built Area": 35.2,
-                       "Bare Ground": 10.5, "Water": 8.5, "Rangeland": 6.0}
-    },
-    "vadodara": {
-        "name": "Vadodara", "name_gu": "વડોદરા",
-        "lat": 22.3072, "lon": 73.1812,
-        "land_cover": {"Crops": 145.6, "Trees": 45.8, "Built Area": 65.2,
-                       "Bare Ground": 15.5, "Water": 12.5, "Rangeland": 8.0}
-    },
-    "surat": {
-        "name": "Surat", "name_gu": "સુરત",
-        "lat": 21.1702, "lon": 72.8311,
-        "land_cover": {"Crops": 135.8, "Trees": 35.6, "Built Area": 75.2,
-                       "Bare Ground": 12.5, "Water": 18.5, "Rangeland": 5.0}
-    },
-    "rajkot": {
-        "name": "Rajkot", "name_gu": "રાજકોટ",
-        "lat": 22.3039, "lon": 70.8022,
-        "land_cover": {"Crops": 155.8, "Trees": 22.5, "Built Area": 55.2,
-                       "Bare Ground": 25.5, "Water": 8.5, "Rangeland": 10.0}
-    }
+    "sabarkantha": {"name": "Sabarkantha", "name_gu": "સાબરકાંઠા", "lat": 23.5979, "lon": 72.9698,
+        "land_cover": {"Crops": 168.5, "Trees": 120.8, "Built Area": 45.2, "Bare Ground": 15.2, "Water": 8.5, "Rangeland": 22.3}},
+    "aravalli": {"name": "Aravalli", "name_gu": "અરવલ્લી", "lat": 23.7179, "lon": 73.0198,
+        "land_cover": {"Crops": 125.3, "Trees": 95.6, "Built Area": 32.1, "Bare Ground": 12.8, "Water": 6.2, "Rangeland": 15.5}},
+    "mehsana": {"name": "Mehsana", "name_gu": "મહેસાણા", "lat": 23.5979, "lon": 72.9698,
+        "land_cover": {"Crops": 210.2, "Trees": 25.6, "Built Area": 38.5, "Bare Ground": 18.5, "Water": 4.2, "Rangeland": 8.0}},
+    "ahmedabad": {"name": "Ahmedabad", "name_gu": "અમદાવાદ", "lat": 23.0225, "lon": 72.5714,
+        "land_cover": {"Crops": 185.3, "Trees": 15.6, "Built Area": 85.2, "Bare Ground": 12.5, "Water": 6.8, "Rangeland": 4.0}},
+    "banaskantha": {"name": "Banaskantha", "name_gu": "બનાસકાંઠા", "lat": 24.3000, "lon": 72.5000,
+        "land_cover": {"Crops": 195.8, "Trees": 18.2, "Built Area": 28.5, "Bare Ground": 22.5, "Water": 5.2, "Rangeland": 12.0}},
+    "kheda": {"name": "Kheda", "name_gu": "ખેડા", "lat": 22.7500, "lon": 72.6833,
+        "land_cover": {"Crops": 178.5, "Trees": 12.5, "Built Area": 35.2, "Bare Ground": 10.5, "Water": 8.5, "Rangeland": 6.0}},
+    "vadodara": {"name": "Vadodara", "name_gu": "વડોદરા", "lat": 22.3072, "lon": 73.1812,
+        "land_cover": {"Crops": 145.6, "Trees": 45.8, "Built Area": 65.2, "Bare Ground": 15.5, "Water": 12.5, "Rangeland": 8.0}},
+    "surat": {"name": "Surat", "name_gu": "સુરત", "lat": 21.1702, "lon": 72.8311,
+        "land_cover": {"Crops": 135.8, "Trees": 35.6, "Built Area": 75.2, "Bare Ground": 12.5, "Water": 18.5, "Rangeland": 5.0}},
+    "rajkot": {"name": "Rajkot", "name_gu": "રાજકોટ", "lat": 22.3039, "lon": 70.8022,
+        "land_cover": {"Crops": 155.8, "Trees": 22.5, "Built Area": 55.2, "Bare Ground": 25.5, "Water": 8.5, "Rangeland": 10.0}}
 }
 
-
-# --- ESRI LAND COVER FUNCTIONS ---
 
 def get_esri_landcover(district_name):
     if district_name not in GUJARAT_DISTRICTS:
         return None, "District not found"
-
     district_data = GUJARAT_DISTRICTS[district_name]
     land_cover = district_data['land_cover']
     total_area = sum(land_cover.values())
-
     categories = []
     for name, area in land_cover.items():
         class_info = None
@@ -173,63 +141,171 @@ def get_esri_landcover(district_name):
             if info['name'] == name:
                 class_info = info
                 break
-
         if class_info:
-            categories.append({
-                'name': class_info['name'], 'name_gu': class_info['name_gu'],
+            categories.append({'name': class_info['name'], 'name_gu': class_info['name_gu'],
                 'area': area, 'color': class_info['color'], 'icon': class_info['icon'],
-                'description': class_info['description'],
-                'percentage': (area / total_area) * 100
-            })
+                'description': class_info['description'], 'percentage': (area / total_area) * 100})
         else:
-            categories.append({
-                'name': name, 'name_gu': name, 'area': area,
-                'color': '#757575', 'icon': '📍', 'description': '',
-                'percentage': (area / total_area) * 100
-            })
-
+            categories.append({'name': name, 'name_gu': name, 'area': area,
+                'color': '#757575', 'icon': '📍', 'description': '', 'percentage': (area / total_area) * 100})
     categories.sort(key=lambda x: x['area'], reverse=True)
-
-    result = {
-        "total_area": total_area, "categories": categories,
-        "district": district_data['name'], "district_gu": district_data['name_gu'],
-        "lat": district_data['lat'], "lon": district_data['lon'],
-        "year": "2024", "source": "ESRI Land Cover", "resolution": "10m"
-    }
+    result = {"total_area": total_area, "categories": categories, "district": district_data['name'],
+        "district_gu": district_data['name_gu'], "lat": district_data['lat'], "lon": district_data['lon'],
+        "year": "2024", "source": "ESRI Land Cover", "resolution": "10m"}
     return result, None
 
 
-# --- DATABASE FUNCTIONS (PostgreSQL) ---
+# --- DATABASE FUNCTIONS ---
 
 def get_db_connection():
     try:
         database_url = os.getenv('DATABASE_URL')
-
         if database_url:
-            # Cloud / Vercel / Neon
-            conn = psycopg2.connect(
-                database_url,
-                cursor_factory=RealDictCursor
-            )
+            conn = psycopg2.connect(database_url, cursor_factory=RealDictCursor)
             print("✅ Connected to Neon PostgreSQL")
         else:
-            # Local development
             conn = psycopg2.connect(
-                host=DB_HOST,
-                database=DB_NAME,
-                user=DB_USER,
-                password=DB_PASSWORD,
-                port=DB_PORT,
-                cursor_factory=RealDictCursor
-            )
+                host=DB_HOST, database=DB_NAME, user=DB_USER,
+                password=DB_PASSWORD, port=DB_PORT, cursor_factory=RealDictCursor)
             print("✅ Connected to local PostgreSQL")
-
         conn.autocommit = False
         return conn
-
     except Exception as e:
         print(f"❌ Database connection error: {e}")
         raise
+
+
+def fix_column_types():
+    """
+    Fix legacy INTEGER is_active columns to BOOLEAN.
+    Safe to run multiple times.
+    """
+    conn = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Check + fix brand_partners
+        try:
+            cursor.execute("""
+                SELECT data_type FROM information_schema.columns
+                WHERE table_name = 'brand_partners' AND column_name = 'is_active'
+            """)
+            row = cursor.fetchone()
+            if row and row['data_type'] == 'integer':
+                print("🔧 Migrating brand_partners.is_active INTEGER → BOOLEAN")
+                cursor.execute("""
+                    ALTER TABLE brand_partners
+                    ALTER COLUMN is_active DROP DEFAULT
+                """)
+                cursor.execute("""
+                    ALTER TABLE brand_partners
+                    ALTER COLUMN is_active TYPE BOOLEAN USING (is_active::int::boolean)
+                """)
+                cursor.execute("""
+                    ALTER TABLE brand_partners
+                    ALTER COLUMN is_active SET DEFAULT TRUE
+                """)
+                conn.commit()
+                print("✅ brand_partners migrated")
+        except Exception as e:
+            print(f"⚠️ brand_partners migration: {e}")
+            conn.rollback()
+
+        # Check + fix achievement_badges
+        try:
+            cursor.execute("""
+                SELECT data_type FROM information_schema.columns
+                WHERE table_name = 'achievement_badges' AND column_name = 'is_active'
+            """)
+            row = cursor.fetchone()
+            if row and row['data_type'] == 'integer':
+                print("🔧 Migrating achievement_badges.is_active INTEGER → BOOLEAN")
+                cursor.execute("ALTER TABLE achievement_badges ALTER COLUMN is_active DROP DEFAULT")
+                cursor.execute("ALTER TABLE achievement_badges ALTER COLUMN is_active TYPE BOOLEAN USING (is_active::int::boolean)")
+                cursor.execute("ALTER TABLE achievement_badges ALTER COLUMN is_active SET DEFAULT TRUE")
+                conn.commit()
+                print("✅ achievement_badges migrated")
+        except Exception as e:
+            print(f"⚠️ achievement_badges migration: {e}")
+            conn.rollback()
+
+        # Check + fix whatsapp_groups
+        try:
+            cursor.execute("""
+                SELECT data_type FROM information_schema.columns
+                WHERE table_name = 'whatsapp_groups' AND column_name = 'is_active'
+            """)
+            row = cursor.fetchone()
+            if row and row['data_type'] == 'integer':
+                print("🔧 Migrating whatsapp_groups.is_active INTEGER → BOOLEAN")
+                cursor.execute("ALTER TABLE whatsapp_groups ALTER COLUMN is_active DROP DEFAULT")
+                cursor.execute("ALTER TABLE whatsapp_groups ALTER COLUMN is_active TYPE BOOLEAN USING (is_active::int::boolean)")
+                cursor.execute("ALTER TABLE whatsapp_groups ALTER COLUMN is_active SET DEFAULT TRUE")
+                conn.commit()
+                print("✅ whatsapp_groups migrated")
+        except Exception as e:
+            print(f"⚠️ whatsapp_groups migration: {e}")
+            conn.rollback()
+
+    except Exception as e:
+        print(f"❌ Column type fix error: {e}")
+    finally:
+        if conn:
+            conn.close()
+
+
+def seed_default_data():
+    """Seed default data (founder, badges) if tables are empty."""
+    conn = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Seed founder if empty
+        try:
+            cursor.execute("SELECT COUNT(*) as cnt FROM founder")
+            if cursor.fetchone()['cnt'] == 0:
+                cursor.execute("""
+                    INSERT INTO founder (name, role, bio, quote, image_url, video_url)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                """, (
+                    'Mr. Santosh Valand - UN-FAO Certified Specialist',
+                    'Co-Founder & CEO of Yogiraj - Agritech - Neo farm',
+                    'Santosh Valand is the Founder and Administrator of Yogiraj Agritech, dedicated to supporting farmers with modern agricultural solutions and technology. His vision is to bridge the gap between traditional farming and modern technology by making innovative, practical, and AI-powered solutions accessible to farmers.',
+                    'Empowering Farmers with the Power of AI.',
+                    None, None))
+                conn.commit()
+                print("✅ Default founder record created")
+        except Exception as e:
+            print(f"⚠️ Founder seed: {e}")
+            conn.rollback()
+
+        # Seed default badges if empty
+        try:
+            cursor.execute("SELECT COUNT(*) as cnt FROM achievement_badges")
+            if cursor.fetchone()['cnt'] == 0:
+                badges = [
+                    ('1 CR + turnover per year', 'Only quality', 'fa-chart-line'),
+                    ('Heavy & great options', 'Trusted by many Big companies', 'fa-award'),
+                    ('Successful order', 'Trusted by Dtech', 'fa-check-circle'),
+                    ('5000+ happy customers', 'Best for all', 'fa-users'),
+                ]
+                for title, desc, icon in badges:
+                    cursor.execute(
+                        "INSERT INTO achievement_badges (title, description, icon, is_active) VALUES (%s, %s, %s, TRUE)",
+                        (title, desc, icon))
+                conn.commit()
+                print("✅ Default badges created")
+        except Exception as e:
+            print(f"⚠️ Badge seed: {e}")
+            conn.rollback()
+
+    except Exception as e:
+        print(f"❌ Seed error: {e}")
+    finally:
+        if conn:
+            conn.close()
 
 
 def init_db():
@@ -240,111 +316,29 @@ def init_db():
         print("📋 Creating database tables...")
 
         tables = [
-            """CREATE TABLE IF NOT EXISTS admin (
-                id SERIAL PRIMARY KEY, username TEXT UNIQUE, password TEXT,
-                email TEXT, full_name TEXT, last_login TIMESTAMP,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""",
-            """CREATE TABLE IF NOT EXISTS products (
-                id SERIAL PRIMARY KEY, title TEXT, category TEXT, price REAL,
-                stock_qty INTEGER, description TEXT, media_type TEXT,
-                media_url TEXT, extra_info TEXT, youtube_url TEXT,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""",
-            """CREATE TABLE IF NOT EXISTS rentals (
-                id SERIAL PRIMARY KEY, title TEXT, daily_rate REAL,
-                location TEXT, description TEXT, media_type TEXT,
-                media_url TEXT, extra_info TEXT, youtube_url TEXT,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""",
-            """CREATE TABLE IF NOT EXISTS blogs (
-                id SERIAL PRIMARY KEY, author_name TEXT, title TEXT,
-                content TEXT, rating INTEGER DEFAULT 5, media_type TEXT,
-                media_url TEXT, youtube_url TEXT,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""",
-            """CREATE TABLE IF NOT EXISTS sales (
-                id SERIAL PRIMARY KEY, title TEXT, description TEXT,
-                banner_image TEXT, discount_percentage REAL,
-                start_date TIMESTAMP, end_date TIMESTAMP,
-                is_active BOOLEAN DEFAULT TRUE,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""",
-            """CREATE TABLE IF NOT EXISTS sale_products (
-                id SERIAL PRIMARY KEY,
-                sale_id INTEGER REFERENCES sales(id),
-                product_id INTEGER REFERENCES products(id),
-                discounted_price REAL)""",
-            """CREATE TABLE IF NOT EXISTS ads (
-                id SERIAL PRIMARY KEY, title TEXT, description TEXT,
-                media_url TEXT, link_url TEXT, position TEXT DEFAULT 'homepage',
-                priority INTEGER DEFAULT 0, start_date TIMESTAMP,
-                end_date TIMESTAMP, is_active BOOLEAN DEFAULT TRUE,
-                clicks INTEGER DEFAULT 0, views INTEGER DEFAULT 0,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""",
-            """CREATE TABLE IF NOT EXISTS land_rentals (
-                id SERIAL PRIMARY KEY, title TEXT, location TEXT,
-                area_size REAL, area_unit TEXT DEFAULT 'Vigha', price REAL,
-                price_unit TEXT DEFAULT 'Per Year', land_type TEXT,
-                soil_type TEXT, water_availability TEXT, description TEXT,
-                contact_name TEXT, contact_phone TEXT, media_type TEXT,
-                media_url TEXT, youtube_url TEXT, status TEXT DEFAULT 'Available',
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""",
-            """CREATE TABLE IF NOT EXISTS founder (
-                id SERIAL PRIMARY KEY, name TEXT, role TEXT, bio TEXT,
-                image_url TEXT, video_url TEXT, quote TEXT)""",
-            """CREATE TABLE IF NOT EXISTS brand_partners (
-                id SERIAL PRIMARY KEY, name TEXT, logo_url TEXT, link_url TEXT,
-                is_active INTEGER DEFAULT 1,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""",
-            """CREATE TABLE IF NOT EXISTS achievement_badges (
-                id SERIAL PRIMARY KEY, title TEXT, description TEXT, icon TEXT,
-                image_url TEXT, is_active INTEGER DEFAULT 1,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""",
-            """CREATE TABLE IF NOT EXISTS crop_rules (
-                id SERIAL PRIMARY KEY, soil_type TEXT, season TEXT,
-                water_availability TEXT, recommended_crop TEXT,
-                variety TEXT, fertilizer_advice TEXT)""",
-            """CREATE TABLE IF NOT EXISTS soil_reports (
-                id SERIAL PRIMARY KEY, farmer_name TEXT, contact TEXT,
-                report_image TEXT, n_value REAL, p_value REAL, k_value REAL,
-                ph_value REAL, ai_advice TEXT, disease_desc TEXT,
-                disease_image TEXT, disease_diagnosis TEXT, disease_advice TEXT,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""",
-            """CREATE TABLE IF NOT EXISTS packed_foods (
-                id SERIAL PRIMARY KEY, title_en TEXT, title_gu TEXT,
-                category_en TEXT, category_gu TEXT, price REAL,
-                stock_qty INTEGER, description_en TEXT, description_gu TEXT,
-                media_url TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""",
-            """CREATE TABLE IF NOT EXISTS product_categories (
-                id SERIAL PRIMARY KEY, name TEXT, icon TEXT,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""",
-            """CREATE TABLE IF NOT EXISTS product_media (
-                id SERIAL PRIMARY KEY,
-                product_id INTEGER REFERENCES products(id),
-                media_url TEXT, media_type TEXT, youtube_url TEXT)""",
-            """CREATE TABLE IF NOT EXISTS product_attributes (
-                id SERIAL PRIMARY KEY,
-                product_id INTEGER REFERENCES products(id),
-                attribute_label TEXT, attribute_value TEXT)""",
-            """CREATE TABLE IF NOT EXISTS category_attributes (
-                id SERIAL PRIMARY KEY,
-                category_id INTEGER REFERENCES product_categories(id),
-                label TEXT, placeholder TEXT, type TEXT, options TEXT)""",
-            """CREATE TABLE IF NOT EXISTS partnership_requests (
-                id SERIAL PRIMARY KEY, brand_name TEXT, contact_person TEXT,
-                email TEXT, phone TEXT, product_category TEXT, message TEXT,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""",
-            """CREATE TABLE IF NOT EXISTS whatsapp_groups (
-                id SERIAL PRIMARY KEY, name TEXT, description TEXT, link TEXT,
-                category TEXT, is_active INTEGER DEFAULT 1,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""",
-            """CREATE TABLE IF NOT EXISTS agri_news (
-                id SERIAL PRIMARY KEY, title TEXT, image_url TEXT,
-                content TEXT, link_url TEXT,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""",
-            """CREATE TABLE IF NOT EXISTS password_resets (
-                id SERIAL PRIMARY KEY, email TEXT, token TEXT,
-                used INTEGER DEFAULT 0,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""",
-            """CREATE TABLE IF NOT EXISTS about_page (
-                id SERIAL PRIMARY KEY, title TEXT, description TEXT,
-                image_url TEXT, video_url TEXT, mission TEXT, vision TEXT)"""
+            """CREATE TABLE IF NOT EXISTS admin (id SERIAL PRIMARY KEY, username TEXT UNIQUE, password TEXT, email TEXT, full_name TEXT, last_login TIMESTAMP, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""",
+            """CREATE TABLE IF NOT EXISTS products (id SERIAL PRIMARY KEY, title TEXT, category TEXT, price REAL, stock_qty INTEGER, description TEXT, media_type TEXT, media_url TEXT, extra_info TEXT, youtube_url TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""",
+            """CREATE TABLE IF NOT EXISTS rentals (id SERIAL PRIMARY KEY, title TEXT, daily_rate REAL, location TEXT, description TEXT, media_type TEXT, media_url TEXT, extra_info TEXT, youtube_url TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""",
+            """CREATE TABLE IF NOT EXISTS blogs (id SERIAL PRIMARY KEY, author_name TEXT, title TEXT, content TEXT, rating INTEGER DEFAULT 5, media_type TEXT, media_url TEXT, youtube_url TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""",
+            """CREATE TABLE IF NOT EXISTS sales (id SERIAL PRIMARY KEY, title TEXT, description TEXT, banner_image TEXT, discount_percentage REAL, start_date TIMESTAMP, end_date TIMESTAMP, is_active BOOLEAN DEFAULT TRUE, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""",
+            """CREATE TABLE IF NOT EXISTS sale_products (id SERIAL PRIMARY KEY, sale_id INTEGER REFERENCES sales(id), product_id INTEGER REFERENCES products(id), discounted_price REAL)""",
+            """CREATE TABLE IF NOT EXISTS ads (id SERIAL PRIMARY KEY, title TEXT, description TEXT, media_url TEXT, link_url TEXT, position TEXT DEFAULT 'homepage', priority INTEGER DEFAULT 0, start_date TIMESTAMP, end_date TIMESTAMP, is_active BOOLEAN DEFAULT TRUE, clicks INTEGER DEFAULT 0, views INTEGER DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""",
+            """CREATE TABLE IF NOT EXISTS land_rentals (id SERIAL PRIMARY KEY, title TEXT, location TEXT, area_size REAL, area_unit TEXT DEFAULT 'Vigha', price REAL, price_unit TEXT DEFAULT 'Per Year', land_type TEXT, soil_type TEXT, water_availability TEXT, description TEXT, contact_name TEXT, contact_phone TEXT, media_type TEXT, media_url TEXT, youtube_url TEXT, status TEXT DEFAULT 'Available', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""",
+            """CREATE TABLE IF NOT EXISTS founder (id SERIAL PRIMARY KEY, name TEXT, role TEXT, bio TEXT, image_url TEXT, video_url TEXT, quote TEXT)""",
+            """CREATE TABLE IF NOT EXISTS brand_partners (id SERIAL PRIMARY KEY, name TEXT, logo_url TEXT, link_url TEXT, is_active BOOLEAN DEFAULT TRUE, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""",
+            """CREATE TABLE IF NOT EXISTS achievement_badges (id SERIAL PRIMARY KEY, title TEXT, description TEXT, icon TEXT, image_url TEXT, is_active BOOLEAN DEFAULT TRUE, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""",
+            """CREATE TABLE IF NOT EXISTS crop_rules (id SERIAL PRIMARY KEY, soil_type TEXT, season TEXT, water_availability TEXT, recommended_crop TEXT, variety TEXT, fertilizer_advice TEXT)""",
+            """CREATE TABLE IF NOT EXISTS soil_reports (id SERIAL PRIMARY KEY, farmer_name TEXT, contact TEXT, report_image TEXT, n_value REAL, p_value REAL, k_value REAL, ph_value REAL, ai_advice TEXT, disease_desc TEXT, disease_image TEXT, disease_diagnosis TEXT, disease_advice TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""",
+            """CREATE TABLE IF NOT EXISTS packed_foods (id SERIAL PRIMARY KEY, title_en TEXT, title_gu TEXT, category_en TEXT, category_gu TEXT, price REAL, stock_qty INTEGER, description_en TEXT, description_gu TEXT, media_url TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""",
+            """CREATE TABLE IF NOT EXISTS product_categories (id SERIAL PRIMARY KEY, name TEXT, icon TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""",
+            """CREATE TABLE IF NOT EXISTS product_media (id SERIAL PRIMARY KEY, product_id INTEGER REFERENCES products(id), media_url TEXT, media_type TEXT, youtube_url TEXT)""",
+            """CREATE TABLE IF NOT EXISTS product_attributes (id SERIAL PRIMARY KEY, product_id INTEGER REFERENCES products(id), attribute_label TEXT, attribute_value TEXT)""",
+            """CREATE TABLE IF NOT EXISTS category_attributes (id SERIAL PRIMARY KEY, category_id INTEGER REFERENCES product_categories(id), label TEXT, placeholder TEXT, type TEXT, options TEXT)""",
+            """CREATE TABLE IF NOT EXISTS partnership_requests (id SERIAL PRIMARY KEY, brand_name TEXT, contact_person TEXT, email TEXT, phone TEXT, product_category TEXT, message TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""",
+            """CREATE TABLE IF NOT EXISTS whatsapp_groups (id SERIAL PRIMARY KEY, name TEXT, description TEXT, link TEXT, category TEXT, is_active BOOLEAN DEFAULT TRUE, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""",
+            """CREATE TABLE IF NOT EXISTS agri_news (id SERIAL PRIMARY KEY, title TEXT, image_url TEXT, content TEXT, link_url TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""",
+            """CREATE TABLE IF NOT EXISTS password_resets (id SERIAL PRIMARY KEY, email TEXT, token TEXT, used INTEGER DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""",
+            """CREATE TABLE IF NOT EXISTS about_page (id SERIAL PRIMARY KEY, title TEXT, description TEXT, image_url TEXT, video_url TEXT, mission TEXT, vision TEXT)"""
         ]
 
         for table_sql in tables:
@@ -355,14 +349,14 @@ def init_db():
                 print(f"⚠️ Error creating table: {e}")
                 conn.rollback()
 
+        # Seed admin user
         try:
             cursor.execute("SELECT * FROM admin WHERE username = 'admin'")
             if not cursor.fetchone():
                 hashed_pw = generate_password_hash("admin123", method="pbkdf2:sha256")
                 cursor.execute(
                     "INSERT INTO admin (username, password, email, full_name) VALUES (%s, %s, %s, %s)",
-                    ("admin", hashed_pw, "yogirajseeds03@gmail.com", "Yogiraj Admin")
-                )
+                    ("admin", hashed_pw, "yogirajseeds03@gmail.com", "Yogiraj Admin"))
                 conn.commit()
                 print("✅ Default admin user created")
         except Exception as e:
@@ -380,7 +374,16 @@ def init_db():
             conn.close()
 
 
-init_db()
+# ============================================================
+# STARTUP — Run init, migrations, and seeding on BOTH local & Vercel
+# ============================================================
+try:
+    init_db()           # 1. Create tables (if not exist)
+    fix_column_types()  # 2. Migrate legacy INTEGER → BOOLEAN
+    seed_default_data() # 3. Seed founder + badges if empty
+    print("✅ Startup complete!")
+except Exception as e:
+    print(f"⚠️ Startup issue: {e}")
 
 
 # --- HELPER FUNCTIONS ---
@@ -405,31 +408,97 @@ def extract_youtube_embed(url):
 
 
 def save_file(file):
+    """
+    Save an uploaded file.
+    Local: saves to static/uploads/, returns filename.
+    Vercel: uploads to Vercel Blob, returns public Blob URL.
+    """
     if not file or file.filename == '':
         return "", ""
+
     filename = secure_filename(file.filename)
-    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-    file.save(filepath)
+    if not filename:
+        return "", ""
+
     video_extensions = ('.mp4', '.mov', '.avi', '.webm', '.mkv', '.3gp')
     media_type = "video" if filename.lower().endswith(video_extensions) else "image"
+
+    # --- Vercel Blob path ---
+    if IS_VERCEL:
+        try:
+            from vercel import blob
+
+            name, ext = os.path.splitext(filename)
+            unique_filename = f"{name}_{int(time.time() * 1000)}{ext}"
+
+            with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as temp_file:
+                temp_path = temp_file.name
+                file.save(temp_path)
+
+            try:
+                content_type = mimetypes.guess_type(filename)[0] or "application/octet-stream"
+
+                blob_result = blob.upload_file(
+                    local_path=temp_path,
+                    path=f"uploads/{unique_filename}",
+                    access="public",
+                    content_type=content_type,
+                    add_random_suffix=False,
+                    overwrite=False
+                )
+
+                blob_url = blob_result.url
+                print(f"✅ Uploaded to Vercel Blob: {blob_url}")
+                return blob_url, media_type
+
+            finally:
+                try:
+                    os.remove(temp_path)
+                except OSError:
+                    pass
+
+        except Exception as e:
+            print(f"❌ Vercel Blob upload failed: {e}")
+            raise
+
+    # --- Local development path ---
+    try:
+        os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+    except OSError:
+        pass
+
+    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    file.save(filepath)
+    print(f"✅ Local file saved: {filename}")
     return filename, media_type
 
 
 def get_media_items(media_url, media_type, youtube_url):
     media_items = []
+
     if youtube_url and youtube_url.strip():
         video_id = youtube_url.split('/')[-1].split('?')[0]
         media_items.append({
-            'type': 'youtube', 'url': youtube_url,
+            'type': 'youtube',
+            'url': youtube_url,
             'thumbnail': f"https://img.youtube.com/vi/{video_id}/mqdefault.jpg"
         })
+
     if media_url and media_url.strip():
         media_type_actual = "video" if media_type == 'video' else "image"
+
+        # Blob URL → use directly
+        if media_url.startswith("http://") or media_url.startswith("https://"):
+            media_url_actual = media_url
+        # Old local filename → prefix with /static/uploads/
+        else:
+            media_url_actual = f"/static/uploads/{media_url}"
+
         media_items.append({
             'type': media_type_actual,
-            'url': f"/static/uploads/{media_url}",
-            'thumbnail': None if media_type == 'video' else f"/static/uploads/{media_url}"
+            'url': media_url_actual,
         })
+
     return media_items
 
 
@@ -449,8 +518,6 @@ def validate_date(date_str):
         if len(parts) != 3:
             return None
         year = int(parts[0])
-        month = int(parts[1])
-        day = int(parts[2].split()[0] if ' ' in parts[2] else parts[2])
         if year < 2000 or year > 2100:
             return None
         return date_str.replace('T', ' ') if 'T' in date_str else date_str
@@ -459,7 +526,7 @@ def validate_date(date_str):
 
 
 # ============================================================
-# 🌤️ WEATHER API (Open-Meteo - Free, No API Key)
+# 🌤️ WEATHER API
 # ============================================================
 
 def get_weather_forecast(lat, lon):
@@ -484,48 +551,39 @@ def get_weather_forecast(lat, lon):
 # ============================================================
 
 def call_groq_ai(prompt, max_retries=3):
-    """Groq Text AI with retry on 429."""
-
     if not GROQ_API_KEY:
-        print("❌ GROQ_API_KEY missing — check your .env file")
+        print("❌ GROQ_API_KEY missing")
         return None, "Groq API key not configured"
 
     system_prompt = """You are Dr. Krishi, a senior AI Agronomist at Yogiraj Agri-Tech in Sabarkantha, Gujarat.
 Provide practical crop advice for farmers. Format with emojis, bullet points.
 Keep it concise and farmer-friendly. Respond in simple Hinglish/Gujarati if appropriate."""
 
-    headers = {
-        "Authorization": f"Bearer {GROQ_API_KEY}",
-        "Content-Type": "application/json"
-    }
-
+    headers = {"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"}
     data = {
         "model": GROQ_TEXT_MODEL,
         "messages": [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": prompt}
         ],
-        "temperature": 0.7,
-        "max_tokens": 800
+        "temperature": 0.7, "max_tokens": 800
     }
 
     allowed, wait = _check_rate_limit()
     if not allowed:
-        print(f"🚦 Local rate limit hit — waiting {wait:.1f}s...")
+        print(f"🚦 Rate limit — waiting {wait:.1f}s...")
         time.sleep(wait)
 
     for attempt in range(max_retries):
         try:
             _record_ai_call()
-            print(f"🔄 Groq Text ({GROQ_TEXT_MODEL}) attempt {attempt + 1}/{max_retries}...")
+            print(f"🔄 Groq Text attempt {attempt + 1}/{max_retries}...")
             response = requests.post(GROQ_CHAT_URL, headers=headers, json=data, timeout=25)
 
             if response.status_code == 200:
-                result = response.json()
-                content = result['choices'][0]['message']['content']
-                print("✅ Groq text response received!")
+                content = response.json()['choices'][0]['message']['content']
+                print("✅ Groq text received!")
                 return content, None
-
             elif response.status_code == 429:
                 retry_after = response.headers.get('Retry-After')
                 try:
@@ -536,164 +594,115 @@ Keep it concise and farmer-friendly. Respond in simple Hinglish/Gujarati if appr
                 print(f"⏳ Groq 429 — waiting {sleep_for:.1f}s...")
                 time.sleep(sleep_for)
                 continue
-
             else:
-                body = response.text[:300] if response.text else ""
-                print(f"⚠️ Groq error {response.status_code}: {body}")
+                print(f"⚠️ Groq error {response.status_code}: {response.text[:200]}")
                 break
-
         except requests.exceptions.Timeout:
-            print(f"⏰ Groq timeout on attempt {attempt + 1}")
+            print(f"⏰ Timeout attempt {attempt + 1}")
             time.sleep(1)
             continue
         except Exception as e:
             print(f"❌ Groq exception: {e}")
             break
 
-    print("❌ Groq text failed after all retries")
     return None, "Groq unavailable"
 
 
 # ============================================================
-# 🚀 GROQ VISION — Image Analysis
+# 🚀 GROQ VISION
 # ============================================================
 
 def call_groq_vision(image_bytes, mime_type, prompt, max_retries=2):
-    """Groq Vision AI for crop disease detection."""
-
     if not GROQ_API_KEY:
         return None, "Groq API key not configured"
 
     b64_image = base64.b64encode(image_bytes).decode('utf-8')
     image_data_url = f"data:{mime_type};base64,{b64_image}"
 
-    system_prompt = """You are Dr. Krishi, an expert AI Agronomist for Yogiraj Agri-Tech in Sabarkantha, Gujarat.
-Analyze the crop/leaf image and respond in simple Hinglish/Gujarati:
-1. Identify the crop name
-2. Identify the disease or pest problem
-3. Give a practical solution (Upay)
-4. Recommend fertilizer, pesticide, or organic remedy
-Keep the response concise and structured with emojis."""
+    system_prompt = """You are Dr. Krishi, an expert AI Agronomist for Yogiraj Agri-Tech.
+Analyze the crop/leaf image and respond in Hinglish/Gujarati:
+1. Identify crop 2. Identify disease/pest 3. Give solution 4. Recommend remedy
+Keep response concise with emojis."""
 
-    headers = {
-        "Authorization": f"Bearer {GROQ_API_KEY}",
-        "Content-Type": "application/json"
-    }
-
+    headers = {"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"}
     data = {
         "model": GROQ_VISION_MODEL,
         "messages": [
             {"role": "system", "content": system_prompt},
-            {
-                "role": "user",
-                "content": [
-                    {"type": "text", "text": prompt or "Analyze this crop image and give advice."},
-                    {"type": "image_url", "image_url": {"url": image_data_url}}
-                ]
-            }
+            {"role": "user", "content": [
+                {"type": "text", "text": prompt or "Analyze this crop image."},
+                {"type": "image_url", "image_url": {"url": image_data_url}}
+            ]}
         ],
-        "temperature": 0.5,
-        "max_tokens": 800
+        "temperature": 0.5, "max_tokens": 800
     }
 
     for attempt in range(max_retries):
         try:
-            print(f"🔄 Groq Vision ({GROQ_VISION_MODEL}) attempt {attempt + 1}/{max_retries}...")
+            print(f"🔄 Groq Vision attempt {attempt + 1}/{max_retries}...")
             response = requests.post(GROQ_CHAT_URL, headers=headers, json=data, timeout=30)
-
             if response.status_code == 200:
-                result = response.json()
-                content = result['choices'][0]['message']['content']
-                print("✅ Groq vision response received!")
+                content = response.json()['choices'][0]['message']['content']
+                print("✅ Groq vision received!")
                 return content, None
-
             elif response.status_code == 429:
                 sleep_for = min(2 ** attempt, 10)
-                print(f"⏳ Groq vision 429 — waiting {sleep_for}s...")
                 time.sleep(sleep_for)
                 continue
-
             else:
-                body = response.text[:300] if response.text else ""
-                print(f"⚠️ Groq vision error {response.status_code}: {body}")
+                print(f"⚠️ Vision error {response.status_code}: {response.text[:200]}")
                 break
-
-        except requests.exceptions.Timeout:
-            print(f"⏰ Groq vision timeout on attempt {attempt + 1}")
-            continue
         except Exception as e:
-            print(f"❌ Groq vision exception: {e}")
+            print(f"❌ Vision exception: {e}")
             break
 
-    print("❌ Groq vision failed")
     return None, "Groq vision unavailable"
 
 
 # ============================================================
-# 🚀 GROQ WHISPER — Voice-to-Text
+# 🚀 GROQ WHISPER
 # ============================================================
 
 def call_groq_whisper(audio_file, language=None):
-    """Groq Whisper for voice-to-text transcription."""
-
     if not GROQ_API_KEY:
         return None, "Groq API key not configured"
 
     headers = {"Authorization": f"Bearer {GROQ_API_KEY}"}
-
-    files = {
-        "file": (audio_file.filename, audio_file.stream, audio_file.mimetype or "audio/webm")
-    }
-    data = {
-        "model": GROQ_WHISPER_MODEL,
-        "response_format": "json"
-    }
+    files = {"file": (audio_file.filename, audio_file.stream, audio_file.mimetype or "audio/webm")}
+    data = {"model": GROQ_WHISPER_MODEL, "response_format": "json"}
     if language:
         data["language"] = language
 
     try:
-        print(f"🔄 Groq Whisper ({GROQ_WHISPER_MODEL}) transcribing...")
+        print(f"🔄 Groq Whisper transcribing...")
         response = requests.post(GROQ_WHISPER_URL, headers=headers, files=files, data=data, timeout=30)
-
         if response.status_code == 200:
-            result = response.json()
-            text = result.get('text', '').strip()
-            print(f"✅ Whisper transcription: {text[:80]}...")
+            text = response.json().get('text', '').strip()
+            print(f"✅ Whisper: {text[:80]}...")
             return text, None
         else:
-            body = response.text[:300] if response.text else ""
-            print(f"⚠️ Whisper error {response.status_code}: {body}")
             return None, f"Whisper error: {response.status_code}"
-
     except Exception as e:
-        print(f"❌ Whisper exception: {e}")
         return None, str(e)
 
-
-# ============================================================
-# 💬 FINAL FALLBACK RESPONSE (when Groq fails)
-# ============================================================
 
 def get_fallback_response(prompt):
     return """---
 🔍 **Diagnosis**
-Thank you for reaching out to Dr. Krishi at Yogiraj Agri-Tech.
+Thank you for reaching out to Dr. Krishi.
 
 🛠️ **Solution**
-Please provide more details about your crop problem. You can ask about:
+Please provide more details about your crop problem:
 • Crop diseases (wheat, cotton, tomato)
 • Fertilizer recommendations
 • Soil health & pH
 • Sowing timing
 
-📦 **Recommended Products**
-Visit our Agri Store for quality seeds, fertilizers, and pesticides.
+📦 **Products**
+Visit our Agri Store for quality seeds and fertilizers.
 
 💡 **Pro Tip**
-Upload a photo of your crop problem for faster diagnosis.
-
-⚠️ **Safety Note**
-Always follow product labels and safety instructions.
+Upload a photo for faster diagnosis.
 ---"""
 
 
@@ -705,7 +714,6 @@ Always follow product labels and safety instructions.
 def login():
     if session.get('admin_logged_in'):
         return redirect(url_for('admin_dashboard'))
-
     if request.method == 'POST':
         password = request.form.get('password', '')
         if password == ADMIN_PASSWORD:
@@ -713,9 +721,7 @@ def login():
             session['admin_username'] = 'admin'
             session['admin_full_name'] = 'Yogiraj Admin'
             return redirect(url_for('admin_dashboard'))
-        else:
-            return render_template('login_simple.html', error="❌ Invalid password.")
-
+        return render_template('login_simple.html', error="❌ Invalid password.")
     return render_template('login_simple.html')
 
 
@@ -752,20 +758,15 @@ def admin_dashboard():
     conn.close()
 
     return render_template('admin.html',
-        products=rows_to_dict(products),
-        rentals=rows_to_dict(rentals_list),
-        blogs=rows_to_dict(blogs),
-        land_rentals=rows_to_dict(land_rentals),
-        sales=rows_to_dict(sales),
-        ads=rows_to_dict(ads),
-        categories=rows_to_dict(categories),
-        groups=rows_to_dict(groups),
-        news_list=rows_to_dict(news_list),
-        admin_phone=ADMIN_WHATSAPP_NUMBER
-    )
+        products=rows_to_dict(products), rentals=rows_to_dict(rentals_list),
+        blogs=rows_to_dict(blogs), land_rentals=rows_to_dict(land_rentals),
+        sales=rows_to_dict(sales), ads=rows_to_dict(ads),
+        categories=rows_to_dict(categories), groups=rows_to_dict(groups),
+        news_list=rows_to_dict(news_list), admin_phone=ADMIN_WHATSAPP_NUMBER)
 
 
-# --- ADMIN CRUD ---
+# --- ADMIN CRUD (all same as before, no changes needed) ---
+# [add_product, add_rental, add_land_rental, delete_*, add_blog — all unchanged]
 
 @app.route('/admin/add_product', methods=['POST'])
 @login_required
@@ -773,12 +774,10 @@ def add_product():
     yt_url = extract_youtube_embed(request.form.get('youtube_url', ''))
     conn = get_db_connection()
     cursor = conn.cursor()
-
     cursor.execute("""
         INSERT INTO products (title, category, price, stock_qty, description,
                               media_type, media_url, extra_info, youtube_url)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-        RETURNING id
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id
     """, (
         request.form.get('title', '').strip(),
         request.form.get('category', '').strip(),
@@ -787,9 +786,7 @@ def add_product():
         request.form.get('description', '').strip(),
         'image', '',
         request.form.get('extra_info', '').strip(),
-        yt_url
-    ))
-
+        yt_url))
     row = cursor.fetchone()
     product_id = row['id'] if row else None
 
@@ -800,8 +797,7 @@ def add_product():
                 filename, media_type = save_file(file)
                 cursor.execute(
                     "INSERT INTO product_media (product_id, media_url, media_type) VALUES (%s, %s, %s)",
-                    (product_id, filename, media_type)
-                )
+                    (product_id, filename, media_type))
 
     conn.commit()
     conn.close()
@@ -826,8 +822,7 @@ def add_rental():
         request.form.get('description', '').strip(),
         media_type, filename,
         request.form.get('extra_info', '').strip(),
-        yt_url
-    ))
+        yt_url))
     conn.commit()
     conn.close()
     return redirect(url_for('admin_dashboard'))
@@ -838,15 +833,14 @@ def add_rental():
 def add_land_rental():
     filename, media_type = save_file(request.files.get('media'))
     yt_url = extract_youtube_embed(request.form.get('youtube_url', ''))
-
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("""
         INSERT INTO land_rentals (
             title, location, area_size, area_unit, price, price_unit,
             land_type, soil_type, water_availability, description,
-            contact_name, contact_phone, media_type, media_url, youtube_url
-        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            contact_name, contact_phone, media_type, media_url, youtube_url)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
     """, (
         request.form.get('title', '').strip(),
         request.form.get('location', '').strip(),
@@ -860,8 +854,7 @@ def add_land_rental():
         request.form.get('description', '').strip(),
         request.form.get('contact_name', '').strip(),
         request.form.get('contact_phone', '').strip(),
-        media_type, filename, yt_url
-    ))
+        media_type, filename, yt_url))
     conn.commit()
     conn.close()
     return redirect(url_for('admin_dashboard'))
@@ -920,7 +913,6 @@ def add_blog():
     rating = request.form.get('rating', 5)
     filename, media_type = save_file(request.files.get('media'))
     yt_url = extract_youtube_embed(request.form.get('youtube_url', ''))
-
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("""
@@ -933,47 +925,35 @@ def add_blog():
     return redirect(url_for('home'))
 
 
-# --- SALE ROUTES ---
-
 @app.route('/sales')
 def sales_page():
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     current_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-
     cursor.execute("SELECT * FROM sales ORDER BY created_at DESC")
     sales = cursor.fetchall()
-
     sale_products = []
     for sale in sales:
         if not sale['is_active']:
             continue
-
         start_date = sale['start_date'].strftime('%Y-%m-%d %H:%M:%S') if sale['start_date'] else ''
         end_date = sale['end_date'].strftime('%Y-%m-%d %H:%M:%S') if sale['end_date'] else ''
-
         if start_date and end_date:
             if start_date <= current_date <= end_date:
                 cursor.execute("""
                     SELECT p.*, sp.discounted_price
-                    FROM sale_products sp
-                    JOIN products p ON sp.product_id = p.id
+                    FROM sale_products sp JOIN products p ON sp.product_id = p.id
                     WHERE sp.sale_id = %s
                 """, (sale['id'],))
                 products = cursor.fetchall()
-
                 sale_dict = dict(sale)
                 sale_dict['products'] = rows_to_dict(products)
                 sale_dict['start_date_display'] = start_date
                 sale_dict['end_date_display'] = end_date
                 sale_products.append(sale_dict)
-
     conn.close()
-    return render_template('sales.html',
-        sales=sale_products,
-        admin_phone=ADMIN_WHATSAPP_NUMBER,
-        is_admin=session.get('admin_logged_in', False)
-    )
+    return render_template('sales.html', sales=sale_products,
+        admin_phone=ADMIN_WHATSAPP_NUMBER, is_admin=session.get('admin_logged_in', False))
 
 
 @app.route('/admin/add_sale', methods=['POST'])
@@ -984,31 +964,23 @@ def add_sale():
     discount = request.form.get('discount_percentage', 0)
     start_date = request.form.get('start_date', '').strip().replace('T', ' ')
     end_date = request.form.get('end_date', '').strip().replace('T', ' ')
-
     filename, media_type = save_file(request.files.get('banner_image'))
-
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("""
         INSERT INTO sales (title, description, banner_image, discount_percentage, start_date, end_date)
-        VALUES (%s, %s, %s, %s, %s, %s)
-        RETURNING id
+        VALUES (%s, %s, %s, %s, %s, %s) RETURNING id
     """, (title, description, filename, discount, start_date, end_date))
-
     row = cursor.fetchone()
     sale_id = row['id'] if row else None
-
     product_ids = request.form.getlist('product_ids')
     discounted_prices = request.form.getlist('discounted_prices')
-
     for i, product_id in enumerate(product_ids):
         if product_id:
             price = discounted_prices[i] if i < len(discounted_prices) else 0
             cursor.execute(
                 "INSERT INTO sale_products (sale_id, product_id, discounted_price) VALUES (%s, %s, %s)",
-                (sale_id, product_id, price)
-            )
-
+                (sale_id, product_id, price))
     conn.commit()
     conn.close()
     return redirect(url_for('admin_dashboard'))
@@ -1026,8 +998,6 @@ def delete_sale(id):
     return redirect(url_for('admin_dashboard'))
 
 
-# --- AD ROUTES ---
-
 @app.route('/admin/add_ad', methods=['POST'])
 @login_required
 def add_ad():
@@ -1038,9 +1008,7 @@ def add_ad():
     priority = request.form.get('priority', 0)
     start_date = validate_date(request.form.get('start_date', '').strip())
     end_date = validate_date(request.form.get('end_date', '').strip())
-
     filename, media_type = save_file(request.files.get('media'))
-
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("""
@@ -1067,7 +1035,6 @@ def delete_ad(id):
 @app.route('/admin/toggle_ad/<int:id>')
 @login_required
 def toggle_ad(id):
-    """Ad ko activate/deactivate karo"""
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("UPDATE ads SET is_active = NOT is_active WHERE id=%s", (id,))
@@ -1079,46 +1046,36 @@ def toggle_ad(id):
 @app.route('/admin/edit_ad/<int:id>', methods=['GET', 'POST'])
 @login_required
 def edit_ad(id):
-    """Ad ko edit karo"""
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
-
     if request.method == 'POST':
         title = request.form.get('title', '').strip()
         description = request.form.get('description', '').strip()
         link_url = request.form.get('link_url', '').strip()
         position = request.form.get('position', 'homepage')
         priority = request.form.get('priority', 0)
-
         new_filename = None
         if 'media' in request.files and request.files['media'].filename != '':
             file = request.files['media']
             new_filename, _ = save_file(file)
-
         if new_filename:
             cursor.execute("""
                 UPDATE ads SET title=%s, description=%s, link_url=%s,
-                               position=%s, priority=%s, media_url=%s
-                WHERE id=%s
+                               position=%s, priority=%s, media_url=%s WHERE id=%s
             """, (title, description, link_url, position, priority, new_filename, id))
         else:
             cursor.execute("""
                 UPDATE ads SET title=%s, description=%s, link_url=%s,
-                               position=%s, priority=%s
-                WHERE id=%s
+                               position=%s, priority=%s WHERE id=%s
             """, (title, description, link_url, position, priority, id))
-
         conn.commit()
         conn.close()
         return redirect(url_for('admin_dashboard') + '#tab-ads')
-
     cursor.execute("SELECT * FROM ads WHERE id=%s", (id,))
     ad = cursor.fetchone()
     conn.close()
-
     if not ad:
         return redirect(url_for('admin_dashboard') + '#tab-ads')
-
     return render_template('edit_ad.html', ad=dict(ad))
 
 
@@ -1126,17 +1083,14 @@ def edit_ad(id):
 def get_ads():
     position = request.args.get('position', 'homepage')
     current_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     cursor.execute("""
         SELECT * FROM ads
-        WHERE is_active = true
-        AND position = %s
+        WHERE is_active = true AND position = %s
         AND (start_date IS NULL OR start_date <= %s)
         AND (end_date IS NULL OR end_date >= %s)
-        ORDER BY priority DESC, created_at DESC
-        LIMIT 5
+        ORDER BY priority DESC, created_at DESC LIMIT 5
     """, (position, current_date, current_date))
     ads = cursor.fetchall()
     conn.close()
@@ -1163,71 +1117,48 @@ def ad_view(id):
     return jsonify({'success': True})
 
 
-# --- PUBLIC ROUTES ---
-
 @app.route('/')
 def home():
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
-
     cursor.execute("SELECT * FROM products ORDER BY id DESC LIMIT 6")
     products = cursor.fetchall()
-
     cursor.execute("SELECT * FROM rentals ORDER BY id DESC LIMIT 4")
     rentals = cursor.fetchall()
-
     cursor.execute("SELECT * FROM blogs ORDER BY id DESC LIMIT 10")
     blogs = cursor.fetchall()
-
     current_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     cursor.execute("""
-        SELECT * FROM ads
-        WHERE is_active = true
-        AND position = 'homepage'
+        SELECT * FROM ads WHERE is_active = true AND position = 'homepage'
         AND (start_date IS NULL OR start_date <= %s)
         AND (end_date IS NULL OR end_date >= %s)
-        ORDER BY priority DESC, created_at DESC
-        LIMIT 3
+        ORDER BY priority DESC, created_at DESC LIMIT 3
     """, (current_date, current_date))
     ads = cursor.fetchall()
-
     cursor.execute("SELECT * FROM founder LIMIT 1")
     founder = cursor.fetchone()
-
-    cursor.execute("SELECT * FROM achievement_badges WHERE is_active = 1 ORDER BY id DESC")
+    cursor.execute("SELECT * FROM achievement_badges WHERE is_active = TRUE ORDER BY id DESC")
     badges = cursor.fetchall()
-
-    cursor.execute("SELECT * FROM whatsapp_groups WHERE is_active = 1 ORDER BY id DESC")
+    cursor.execute("SELECT * FROM whatsapp_groups WHERE is_active = TRUE ORDER BY id DESC")
     groups = cursor.fetchall()
-
     cursor.execute("SELECT * FROM agri_news ORDER BY id DESC LIMIT 3")
     news_list = cursor.fetchall()
-
     conn.close()
-
     products = rows_to_dict(products)
     blogs = rows_to_dict(blogs)
     badges = rows_to_dict(badges)
     groups = rows_to_dict(groups)
     news_list = rows_to_dict(news_list)
-
     for p in products:
         p['media_items'] = get_media_items(p.get('media_url'), p.get('media_type'), p.get('youtube_url'))
     for b in blogs:
         b['media_items'] = get_media_items(b.get('media_url'), b.get('media_type'), b.get('youtube_url'))
-
     return render_template('index.html',
-        products=products,
-        rentals=rows_to_dict(rentals),
-        blogs=blogs,
-        ads=rows_to_dict(ads),
-        founder=founder,
-        badges=badges,
-        groups=groups,
-        news_list=news_list,
+        products=products, rentals=rows_to_dict(rentals), blogs=blogs,
+        ads=rows_to_dict(ads), founder=founder, badges=badges,
+        groups=groups, news_list=news_list,
         admin_phone=ADMIN_WHATSAPP_NUMBER,
-        is_admin=session.get('admin_logged_in', False)
-    )
+        is_admin=session.get('admin_logged_in', False))
 
 
 @app.route('/admin/badges', methods=['GET', 'POST'])
@@ -1235,35 +1166,26 @@ def home():
 def admin_badges():
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
-
     if request.method == 'POST':
         action = request.form.get('action')
-
         if action == 'add':
             title = request.form['title']
             description = request.form['description']
             icon = request.form['icon']
-
             filename = ""
             if 'badge_image' in request.files and request.files['badge_image'].filename != '':
                 file = request.files['badge_image']
-                filename = secure_filename(file.filename)
-                file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-
+                filename, _ = save_file(file)
             cursor.execute(
                 "INSERT INTO achievement_badges (title, description, icon, image_url) VALUES (%s, %s, %s, %s)",
-                (title, description, icon, filename)
-            )
-
+                (title, description, icon, filename))
         elif action == 'delete':
             badge_id = request.form['badge_id']
             cursor.execute("DELETE FROM achievement_badges WHERE id=%s", (badge_id,))
-
         conn.commit()
         conn.close()
         return redirect(url_for('admin_badges'))
-
-    cursor.execute("SELECT * FROM achievement_badges WHERE is_active = 1 ORDER BY id DESC")
+    cursor.execute("SELECT * FROM achievement_badges WHERE is_active = TRUE ORDER BY id DESC")
     badges = cursor.fetchall()
     conn.close()
     return render_template('admin_badges.html', badges=rows_to_dict(badges))
@@ -1274,33 +1196,22 @@ def store():
     page = request.args.get('page', 1, type=int)
     per_page = 9
     offset = (page - 1) * per_page
-
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
-
     cursor.execute("SELECT * FROM products ORDER BY id DESC LIMIT %s OFFSET %s", (per_page, offset))
     products = cursor.fetchall()
-
     cursor.execute("SELECT COUNT(*) as count FROM products")
     total_count = cursor.fetchone()['count']
-
     cursor.execute("SELECT * FROM product_categories ORDER BY id DESC")
     categories = cursor.fetchall()
-
     conn.close()
-
     products = rows_to_dict(products)
     for p in products:
         p['media_items'] = get_media_items(p.get('media_url'), p.get('media_type'), p.get('youtube_url'))
-
-    return render_template('store.html',
-        products=products,
-        categories=rows_to_dict(categories),
-        page=page,
-        total_count=total_count,
-        admin_phone=ADMIN_WHATSAPP_NUMBER,
-        is_admin=session.get('admin_logged_in', False)
-    )
+    return render_template('store.html', products=products,
+        categories=rows_to_dict(categories), page=page,
+        total_count=total_count, admin_phone=ADMIN_WHATSAPP_NUMBER,
+        is_admin=session.get('admin_logged_in', False))
 
 
 @app.route('/rentals')
@@ -1310,15 +1221,11 @@ def rentals():
     cursor.execute("SELECT * FROM rentals ORDER BY id DESC")
     rentals_list = cursor.fetchall()
     conn.close()
-
     rentals_list = rows_to_dict(rentals_list)
     for r in rentals_list:
         r['media_items'] = get_media_items(r.get('media_url'), r.get('media_type'), r.get('youtube_url'))
-    return render_template('rentals.html',
-        rentals=rentals_list,
-        admin_phone=ADMIN_WHATSAPP_NUMBER,
-        is_admin=session.get('admin_logged_in', False)
-    )
+    return render_template('rentals.html', rentals=rentals_list,
+        admin_phone=ADMIN_WHATSAPP_NUMBER, is_admin=session.get('admin_logged_in', False))
 
 
 @app.route('/mandi')
@@ -1328,35 +1235,26 @@ def packed_mandi():
     cursor.execute("SELECT * FROM packed_foods ORDER BY id DESC")
     items = cursor.fetchall()
     conn.close()
-    return render_template('mandi.html',
-        items=rows_to_dict(items),
-        admin_phone=ADMIN_WHATSAPP_NUMBER,
-        is_admin=session.get('admin_logged_in', False)
-    )
+    return render_template('mandi.html', items=rows_to_dict(items),
+        admin_phone=ADMIN_WHATSAPP_NUMBER, is_admin=session.get('admin_logged_in', False))
 
 
 @app.route('/ai-advisor')
 def ai_advisor():
     return render_template('ai_advisor_simple.html',
-        admin_phone=ADMIN_WHATSAPP_NUMBER,
-        is_admin=session.get('admin_logged_in', False)
-    )
+        admin_phone=ADMIN_WHATSAPP_NUMBER, is_admin=session.get('admin_logged_in', False))
 
 
 @app.route('/field-health')
 def field_health():
     return render_template('field_health_real.html',
-        admin_phone=ADMIN_WHATSAPP_NUMBER,
-        is_admin=session.get('admin_logged_in', False)
-    )
+        admin_phone=ADMIN_WHATSAPP_NUMBER, is_admin=session.get('admin_logged_in', False))
 
 
 @app.route('/landcover')
 def landcover():
     return render_template('landcover_esri.html',
-        admin_phone=ADMIN_WHATSAPP_NUMBER,
-        is_admin=session.get('admin_logged_in', False)
-    )
+        admin_phone=ADMIN_WHATSAPP_NUMBER, is_admin=session.get('admin_logged_in', False))
 
 
 @app.route('/land-rentals')
@@ -1366,70 +1264,48 @@ def land_rentals():
     cursor.execute("SELECT * FROM land_rentals WHERE status = 'Available' ORDER BY created_at DESC")
     land_listings = cursor.fetchall()
     conn.close()
-
     land_listings = rows_to_dict(land_listings)
     for listing in land_listings:
         listing['media_items'] = get_media_items(
-            listing.get('media_url'), listing.get('media_type'), listing.get('youtube_url')
-        )
-
-    return render_template('land_rentals.html',
-        land_listings=land_listings,
-        admin_phone=ADMIN_WHATSAPP_NUMBER,
-        is_admin=session.get('admin_logged_in', False)
-    )
+            listing.get('media_url'), listing.get('media_type'), listing.get('youtube_url'))
+    return render_template('land_rentals.html', land_listings=land_listings,
+        admin_phone=ADMIN_WHATSAPP_NUMBER, is_admin=session.get('admin_logged_in', False))
 
 
 @app.route('/community')
 def community():
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
-    cursor.execute("SELECT * FROM whatsapp_groups WHERE is_active = 1 ORDER BY id DESC")
+    cursor.execute("SELECT * FROM whatsapp_groups WHERE is_active = TRUE ORDER BY id DESC")
     groups = cursor.fetchall()
     conn.close()
-    return render_template('community.html',
-        groups=rows_to_dict(groups),
-        admin_phone=ADMIN_WHATSAPP_NUMBER,
-        is_admin=session.get('admin_logged_in', False)
-    )
+    return render_template('community.html', groups=rows_to_dict(groups),
+        admin_phone=ADMIN_WHATSAPP_NUMBER, is_admin=session.get('admin_logged_in', False))
 
-
-# --- API ROUTES ---
 
 @app.route('/api/weather')
 def get_weather():
     lat = request.args.get('lat', '23.5979')
     lon = request.args.get('lon', '72.9698')
-
     try:
         weather_data, error = get_weather_forecast(lat, lon)
         if weather_data:
             return jsonify(weather_data)
         return jsonify({
-            "current": {"temperature_2m": 31, "relative_humidity_2m": 55,
-                        "wind_speed_10m": 12, "weather_code": 0},
-            "daily": {
-                "temperature_2m_max": [32, 33, 34, 32, 31, 30, 29],
-                "temperature_2m_min": [22, 23, 24, 22, 21, 20, 19]
-            }
+            "current": {"temperature_2m": 31, "relative_humidity_2m": 55, "wind_speed_10m": 12, "weather_code": 0},
+            "daily": {"temperature_2m_max": [32, 33, 34, 32, 31, 30, 29], "temperature_2m_min": [22, 23, 24, 22, 21, 20, 19]}
         })
     except Exception:
-        return jsonify({
-            "current": {"temperature_2m": 31, "relative_humidity_2m": 55,
-                        "wind_speed_10m": 12, "weather_code": 0}
-        })
+        return jsonify({"current": {"temperature_2m": 31, "relative_humidity_2m": 55, "wind_speed_10m": 12, "weather_code": 0}})
 
 
 @app.route('/api/esri-landcover', methods=['GET'])
 def api_esri_landcover():
     district = request.args.get('district', 'sabarkantha')
     lang = request.args.get('lang', 'en')
-
     if district not in GUJARAT_DISTRICTS:
         return jsonify({'success': False, 'error': 'District not found'}), 404
-
     data, error = get_esri_landcover(district)
-
     if data:
         return jsonify({'success': True, 'data': data, 'district': district, 'lang': lang})
     return jsonify({'success': False, 'error': error}), 500
@@ -1440,7 +1316,6 @@ def api_nasa_ndvi():
     lat = request.args.get('lat', '23.5979')
     lon = request.args.get('lon', '72.9698')
     mode = request.args.get('mode', 'image')
-
     if mode == 'image':
         try:
             from PIL import Image, ImageDraw
@@ -1461,66 +1336,35 @@ def api_nasa_ndvi():
         grid_data = []
         for i in range(5):
             for j in range(5):
-                grid_data.append({
-                    'lat': float(lat) + (i - 2) * 0.05,
-                    'lon': float(lon) + (j - 2) * 0.05,
-                    'ndvi': random.uniform(0.2, 0.8)
-                })
+                grid_data.append({'lat': float(lat) + (i - 2) * 0.05, 'lon': float(lon) + (j - 2) * 0.05, 'ndvi': random.uniform(0.2, 0.8)})
         return jsonify({'success': True, 'data': grid_data, 'type': 'grid'})
-    else:
-        return jsonify({'success': False, 'error': 'Invalid mode'}), 400
+    return jsonify({'success': False, 'error': 'Invalid mode'}), 400
 
-
-# ============================================================
-# 🤖 AI CONSULT — Uses Groq Text
-# ============================================================
 
 @app.route('/api/ai_consult', methods=['POST'])
 def ai_consult():
     data = request.json or {}
     user_prompt = data.get('prompt', '').strip()
-
     if not user_prompt:
         return jsonify({'error': 'Please describe your crop problem.'}), 400
-
     try:
         response_text, error = call_groq_ai(user_prompt)
         if response_text:
-            return jsonify({
-                'reply': response_text,
-                'timestamp': datetime.now().strftime("%I:%M %p"),
-                'success': True
-            })
-        else:
-            return jsonify({
-                'reply': get_fallback_response(user_prompt),
-                'timestamp': datetime.now().strftime("%I:%M %p"),
-                'success': True
-            })
+            return jsonify({'reply': response_text, 'timestamp': datetime.now().strftime("%I:%M %p"), 'success': True})
+        return jsonify({'reply': get_fallback_response(user_prompt), 'timestamp': datetime.now().strftime("%I:%M %p"), 'success': True})
     except Exception as e:
         print(f"❌ Error: {e}")
-        return jsonify({
-            'reply': get_fallback_response(user_prompt),
-            'timestamp': datetime.now().strftime("%I:%M %p"),
-            'success': True
-        })
+        return jsonify({'reply': get_fallback_response(user_prompt), 'timestamp': datetime.now().strftime("%I:%M %p"), 'success': True})
 
-
-# ============================================================
-# 🎤 VOICE TRANSCRIBE — Uses Groq Whisper
-# ============================================================
 
 @app.route('/api/transcribe', methods=['POST'])
 def transcribe_audio():
     if 'audio' not in request.files:
         return jsonify({'error': 'No audio file uploaded'}), 400
-
     audio = request.files['audio']
     if audio.filename == '':
         return jsonify({'error': 'No audio file selected'}), 400
-
     language = request.form.get('language') or None
-
     try:
         text, error = call_groq_whisper(audio, language=language)
         if text:
@@ -1530,38 +1374,26 @@ def transcribe_audio():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
-# ============================================================
-# 📸 VISION ANALYZE — Uses Groq Vision (Qwen)
-# ============================================================
-
 @app.route('/api/vision_analyze', methods=['POST'])
 def vision_analyze():
     if 'file' not in request.files:
         return jsonify({'error': 'No file uploaded'}), 400
-
     file = request.files['file']
     if file.filename == '':
         return jsonify({'error': 'No file selected'}), 400
-
     allowed_types = {'image/jpeg', 'image/png', 'image/webp', 'image/gif'}
     mime_type = file.mimetype or 'image/jpeg'
     if mime_type not in allowed_types:
-        return jsonify({'error': f'Unsupported image type: {mime_type}. Use JPG/PNG/WEBP.'}), 400
-
+        return jsonify({'error': f'Unsupported image type: {mime_type}'}), 400
     try:
         image_bytes = file.read()
         if len(image_bytes) > 20 * 1024 * 1024:
             return jsonify({'error': 'Image too large (max 20 MB)'}), 400
-
-        prompt = request.form.get('prompt', '').strip() or \
-            "Analyze this crop/leaf image and give farmer-friendly advice."
-
+        prompt = request.form.get('prompt', '').strip() or "Analyze this crop/leaf image."
         response_text, error = call_groq_vision(image_bytes, mime_type, prompt)
-
         if response_text:
             return jsonify({'success': True, 'reply': response_text})
         return jsonify({'success': False, 'error': error or 'Vision analysis failed'}), 500
-
     except Exception as e:
         print(f"❌ Vision error: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
@@ -1571,148 +1403,97 @@ def vision_analyze():
 def chatbot_api():
     data = request.json or {}
     message = data.get('message', '').strip()
-
     if not message:
         return jsonify({'reply': 'Hello! How can I assist you with farming today? 🌾'})
 
     if "recommend" in message.lower() or "crop" in message.lower() or "suggest" in message.lower():
-        soil = "Loamy"
-        season = "Rabi"
-        water = "Year-round"
-
+        soil, season, water = "Loamy", "Rabi", "Year-round"
         if "clay" in message.lower(): soil = "Clay"
         if "sandy" in message.lower(): soil = "Sandy"
-        if "kharif" in message.lower(): season = "Kharif"
-        if "monsoon" in message.lower(): season = "Kharif"
+        if "kharif" in message.lower() or "monsoon" in message.lower(): season = "Kharif"
         if "rain" in message.lower(): water = "Rain-fed"
         if "irrigation" in message.lower(): water = "Irrigation Available"
-
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=RealDictCursor)
-        cursor.execute(
-            "SELECT * FROM crop_rules WHERE soil_type = %s AND season = %s AND water_availability = %s",
-            (soil, season, water)
-        )
+        cursor.execute("SELECT * FROM crop_rules WHERE soil_type = %s AND season = %s AND water_availability = %s", (soil, season, water))
         rules = cursor.fetchall()
         conn.close()
-
         if rules:
-            reply = "🌾 **Based on your farm conditions, here are the best crops:**\n\n"
+            reply = "🌾 **Based on your farm conditions:**\n\n"
             for r in rules:
-                reply += f"✅ **{r['recommended_crop']}** (Variety: {r['variety'] or 'Standard'})\n👉 {r['fertilizer_advice'] or 'Consult local expert for fertilization.'}\n\n"
+                reply += f"✅ **{r['recommended_crop']}** (Variety: {r['variety'] or 'Standard'})\n👉 {r['fertilizer_advice'] or 'Consult local expert.'}\n\n"
             return jsonify({'reply': reply})
-        else:
-            return jsonify({'reply': "🌾 I don't have a rule for those exact conditions yet. Please contact the Admin to add this rule."})
+        return jsonify({'reply': "🌾 No rule for those exact conditions. Contact Admin."})
 
-    if "soil" in message.lower() or "report" in message.lower() or "n-p-k" in message.lower() or "ph" in message.lower():
+    if "soil" in message.lower() or "n-p-k" in message.lower() or "ph" in message.lower():
         numbers = [float(s) for s in re.findall(r'[-+]?\d*\.\d+|\d+', message)]
-
         if len(numbers) >= 4:
             n, p, k, ph = numbers[0], numbers[1], numbers[2], numbers[3]
-
-            advice = "✅ **Your soil is balanced.** Maintain current practices."
-            if ph < 5.5:
-                advice = "⚠️ **Soil is highly Acidic.** Add Lime (Calcium Carbonate) to raise pH."
-            elif ph > 8.0:
-                advice = "⚠️ **Soil is Alkaline.** Add Gypsum or organic compost to lower pH."
-            elif n < 20:
-                advice = "⚠️ **Nitrogen (N) is low.** Apply Urea or DAP to boost vegetative growth."
-            elif k < 40:
-                advice = "⚠️ **Potassium (K) is low.** Apply MOP (Muriate of Potash) for better fruiting."
-
-            reply = f"🧪 **Soil Report Analysis Complete:**\n\n📊 **Values Detected:** N={n}, P={p}, K={k}, pH={ph}\n\n💡 **Advice:** {advice}"
-            return jsonify({'reply': reply})
-        else:
-            return jsonify({'reply': "🧪 **I can analyze your soil report!** Please type your N-P-K and pH values like this:\n\n*Example: My soil report shows N=25, P=15, K=45, pH=6.5*"})
+            advice = "✅ **Your soil is balanced.**"
+            if ph < 5.5: advice = "⚠️ **Acidic soil.** Add Lime."
+            elif ph > 8.0: advice = "⚠️ **Alkaline soil.** Add Gypsum."
+            elif n < 20: advice = "⚠️ **Low Nitrogen.** Apply Urea."
+            elif k < 40: advice = "⚠️ **Low Potassium.** Apply MOP."
+            return jsonify({'reply': f"🧪 **Soil Analysis:**\n\nN={n}, P={p}, K={k}, pH={ph}\n\n💡 {advice}"})
+        return jsonify({'reply': "🧪 Type N-P-K-pH like: `N=25, P=15, K=45, pH=6.5`"})
 
     try:
-        formatted_prompt = f"""You are Dr. Krishi, an expert AI Agronomist at Yogiraj Agri-Tech.
-        The farmer asked: "{message}"
-        Please reply in a clean, structured format with emojis."""
-
+        formatted_prompt = f'You are Dr. Krishi, AI Agronomist. Farmer asked: "{message}". Reply with emojis.'
         response_text, error = call_groq_ai(formatted_prompt)
         if response_text:
             return jsonify({'reply': response_text})
     except Exception:
         pass
-
     return jsonify({'reply': get_fallback_response(message)})
 
-
-# --- ADMIN FOUNDER ROUTE ---
 
 @app.route('/admin/founder', methods=['GET', 'POST'])
 @login_required
 def admin_founder():
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
-
     if request.method == 'POST':
         name = request.form.get('name', '').strip()
         role = request.form.get('role', '').strip()
         bio = request.form.get('bio', '').strip()
         quote = request.form.get('quote', '').strip()
         video_url = request.form.get('video_url', '').strip()
-
         image_filename = None
         if 'image' in request.files:
             file = request.files['image']
             if file and file.filename != '':
-                filename = secure_filename(file.filename)
-                name_parts = filename.rsplit('.', 1)
-                if len(name_parts) == 2:
-                    filename = f"founder_{int(time.time())}.{name_parts[1]}"
-                else:
-                    filename = f"founder_{int(time.time())}.jpg"
-
-                filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                file.save(filepath)
-                image_filename = filename
-                print(f"✅ Image saved: {filename}")
-
+                image_filename, _ = save_file(file)
+                print(f"✅ Founder image saved: {image_filename}")
         cursor.execute("SELECT * FROM founder LIMIT 1")
         existing = cursor.fetchone()
-
         if existing:
             if image_filename:
-                if existing.get('image_url'):
-                    old_path = os.path.join(app.config['UPLOAD_FOLDER'], existing['image_url'])
+                old_url = existing.get('image_url')
+                if old_url and not (old_url.startswith("http://") or old_url.startswith("https://")):
+                    old_path = os.path.join(app.config['UPLOAD_FOLDER'], old_url)
                     if os.path.exists(old_path):
                         os.remove(old_path)
-                        print(f"🗑️ Old image deleted: {existing['image_url']}")
-
                 cursor.execute("""
-                    UPDATE founder SET
-                        name=%s, role=%s, bio=%s, quote=%s,
-                        image_url=%s, video_url=%s
-                    WHERE id=%s
+                    UPDATE founder SET name=%s, role=%s, bio=%s, quote=%s,
+                        image_url=%s, video_url=%s WHERE id=%s
                 """, (name, role, bio, quote, image_filename, video_url, existing['id']))
             else:
                 cursor.execute("""
-                    UPDATE founder SET
-                        name=%s, role=%s, bio=%s, quote=%s, video_url=%s
-                    WHERE id=%s
+                    UPDATE founder SET name=%s, role=%s, bio=%s, quote=%s, video_url=%s WHERE id=%s
                 """, (name, role, bio, quote, video_url, existing['id']))
         else:
             cursor.execute("""
                 INSERT INTO founder (name, role, bio, quote, image_url, video_url)
                 VALUES (%s, %s, %s, %s, %s, %s)
             """, (name, role, bio, quote, image_filename, video_url))
-
         conn.commit()
-        print("✅ Founder data saved to database")
         conn.close()
-
         return redirect(url_for('admin_founder'))
-
     cursor.execute("SELECT * FROM founder LIMIT 1")
     founder = cursor.fetchone()
     conn.close()
-
     return render_template('admin_founder.html', founder=founder)
 
-
-# --- ABOUT PAGE ROUTES ---
 
 @app.route('/about')
 def about():
@@ -1729,7 +1510,6 @@ def about():
 def admin_about():
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
-
     if request.method == 'POST':
         title = request.form['title']
         description = request.form['description']
@@ -1737,37 +1517,32 @@ def admin_about():
         video = request.form['video_url']
         mission = request.form['mission']
         vision = request.form['vision']
-
         cursor.execute("SELECT * FROM about_page")
         exists = cursor.fetchone()
         if exists:
             cursor.execute("""
                 UPDATE about_page SET title=%s, description=%s, image_url=%s,
-                                     video_url=%s, mission=%s, vision=%s
+                    video_url=%s, mission=%s, vision=%s
             """, (title, description, image, video, mission, vision))
         else:
             cursor.execute("""
                 INSERT INTO about_page (title, description, image_url, video_url, mission, vision)
                 VALUES (%s, %s, %s, %s, %s, %s)
             """, (title, description, image, video, mission, vision))
-
         conn.commit()
         conn.close()
         return redirect(url_for('about'))
-
     cursor.execute("SELECT * FROM about_page LIMIT 1")
     about_data = cursor.fetchone()
     conn.close()
     return render_template('admin_about.html', about=about_data)
 
 
-# --- BRAND PARTNERS ROUTES ---
-
 @app.route('/api/brand_partners')
 def get_brand_partners():
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
-    cursor.execute("SELECT * FROM brand_partners WHERE is_active = 1 ORDER BY id DESC")
+    cursor.execute("SELECT * FROM brand_partners WHERE is_active = TRUE ORDER BY id DESC")
     partners = cursor.fetchall()
     conn.close()
     return jsonify(rows_to_dict(partners))
@@ -1778,34 +1553,24 @@ def get_brand_partners():
 def admin_brand_partners():
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
-
     if request.method == 'POST':
         action = request.form.get('action')
-
         if action == 'add':
             name = request.form['name']
             logo = request.form['logo_url']
             link = request.form['link_url']
-            cursor.execute(
-                "INSERT INTO brand_partners (name, logo_url, link_url) VALUES (%s, %s, %s)",
-                (name, logo, link)
-            )
-
+            cursor.execute("INSERT INTO brand_partners (name, logo_url, link_url) VALUES (%s, %s, %s)", (name, logo, link))
         elif action == 'delete':
             partner_id = request.form['partner_id']
             cursor.execute("DELETE FROM brand_partners WHERE id=%s", (partner_id,))
-
         conn.commit()
         conn.close()
         return redirect(url_for('admin_brand_partners'))
-
     cursor.execute("SELECT * FROM brand_partners ORDER BY id DESC")
     partners = cursor.fetchall()
     conn.close()
     return render_template('admin_brand_partners.html', partners=rows_to_dict(partners))
 
-
-# --- SOIL & CROP ROUTES ---
 
 @app.route('/soil-crop-advisor')
 def soil_crop_advisor():
@@ -1814,30 +1579,22 @@ def soil_crop_advisor():
     cursor.execute("SELECT * FROM crop_rules")
     rules = cursor.fetchall()
     conn.close()
-    return render_template('soil_crop_advisor.html',
-        rules=rows_to_dict(rules),
-        admin_phone=ADMIN_WHATSAPP_NUMBER,
-        is_admin=session.get('admin_logged_in', False)
-    )
+    return render_template('soil_crop_advisor.html', rules=rows_to_dict(rules),
+        admin_phone=ADMIN_WHATSAPP_NUMBER, is_admin=session.get('admin_logged_in', False))
 
 
 @app.route('/admin/add_crop_rule', methods=['POST'])
 @login_required
 def add_crop_rule():
-    soil = request.form['soil_type'].strip()
-    season = request.form['season'].strip()
-    water = request.form['water_availability'].strip()
-    crop = request.form['recommended_crop'].strip()
-    variety = request.form['variety'].strip()
-    advice = request.form['fertilizer_advice'].strip()
-
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("""
         INSERT INTO crop_rules (soil_type, season, water_availability,
-                                recommended_crop, variety, fertilizer_advice)
+            recommended_crop, variety, fertilizer_advice)
         VALUES (%s, %s, %s, %s, %s, %s)
-    """, (soil, season, water, crop, variety, advice))
+    """, (request.form['soil_type'].strip(), request.form['season'].strip(),
+          request.form['water_availability'].strip(), request.form['recommended_crop'].strip(),
+          request.form['variety'].strip(), request.form['fertilizer_advice'].strip()))
     conn.commit()
     conn.close()
     return redirect(url_for('admin_dashboard'))
@@ -1858,46 +1615,33 @@ def delete_crop_rule(id):
 def submit_soil_report():
     name = request.form['name'].strip()
     contact = request.form['contact'].strip()
-
-    n_str = request.form.get('n_value', '0')
-    p_str = request.form.get('p_value', '0')
-    k_str = request.form.get('k_value', '0')
-    ph_str = request.form.get('ph_value', '0')
-
     try:
-        n = float(n_str) if n_str else 0.0
-        p = float(p_str) if p_str else 0.0
-        k = float(k_str) if k_str else 0.0
-        ph = float(ph_str) if ph_str else 0.0
+        n = float(request.form.get('n_value', '0') or 0)
+        p = float(request.form.get('p_value', '0') or 0)
+        k = float(request.form.get('k_value', '0') or 0)
+        ph = float(request.form.get('ph_value', '0') or 0)
     except ValueError:
         n, p, k, ph = 0.0, 0.0, 0.0, 7.0
-
     disease_desc = request.form.get('disease_description', '').strip()
     disease_image = ""
     if 'disease_image' in request.files and request.files['disease_image'].filename != '':
         file = request.files['disease_image']
-        disease_image = secure_filename(file.filename)
-        file.save(os.path.join(app.config['UPLOAD_FOLDER'], disease_image))
-
+        disease_image, _ = save_file(file)
     report_image = ""
     if 'report_image' in request.files and request.files['report_image'].filename != '':
         file = request.files['report_image']
-        report_image = secure_filename(file.filename)
-        file.save(os.path.join(app.config['UPLOAD_FOLDER'], report_image))
-
+        report_image, _ = save_file(file)
     soil_advice = "✅ Your soil is balanced. Maintain current practices."
     if ph < 5.5:
-        soil_advice = "⚠️ Your soil is acidic. Add Lime (Calcium Carbonate) to raise pH."
+        soil_advice = "⚠️ Your soil is acidic. Add Lime (Calcium Carbonate)."
     elif ph > 8.0:
-        soil_advice = "⚠️ Your soil is alkaline. Add Gypsum or organic compost to lower pH."
+        soil_advice = "⚠️ Your soil is alkaline. Add Gypsum or compost."
     elif n < 20:
-        soil_advice = "⚠️ Your Nitrogen (N) is low. Apply Urea or DAP to boost vegetative growth."
+        soil_advice = "⚠️ Nitrogen (N) low. Apply Urea or DAP."
     elif k < 40:
-        soil_advice = "⚠️ Your Potassium (K) is low. Apply MOP (Muriate of Potash) for better fruiting."
-
+        soil_advice = "⚠️ Potassium (K) low. Apply MOP."
     disease_advice = ""
     disease_diagnosis = ""
-
     if disease_desc:
         try:
             response_text, error = call_groq_ai(f"I am a farmer. My crop has this problem: {disease_desc}")
@@ -1906,11 +1650,10 @@ def submit_soil_report():
                 disease_diagnosis = "Analysis Complete"
             else:
                 disease_diagnosis = "Analysis failed"
-                disease_advice = "Could not connect to AI service. Please try again."
+                disease_advice = "Could not connect to AI."
         except Exception as e:
             disease_diagnosis = "Error"
-            disease_advice = f"Error processing request: {str(e)}"
-
+            disease_advice = f"Error: {str(e)}"
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("""
@@ -1922,16 +1665,10 @@ def submit_soil_report():
           disease_desc, disease_image, disease_diagnosis, disease_advice))
     conn.commit()
     conn.close()
-
-    return jsonify({
-        'success': True, 'advice': soil_advice,
+    return jsonify({'success': True, 'advice': soil_advice,
         'n': n, 'p': p, 'k': k, 'ph': ph,
-        'disease_advice': disease_advice,
-        'disease_diagnosis': disease_diagnosis
-    })
+        'disease_advice': disease_advice, 'disease_diagnosis': disease_diagnosis})
 
-
-# --- CATEGORY SYSTEM ---
 
 @app.route('/admin/add_category_ajax', methods=['POST'])
 @login_required
@@ -1940,10 +1677,7 @@ def add_category_ajax():
     if name:
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute(
-            "INSERT INTO product_categories (name, icon) VALUES (%s, %s) RETURNING id",
-            (name, 'fa-tag')
-        )
+        cursor.execute("INSERT INTO product_categories (name, icon) VALUES (%s, %s) RETURNING id", (name, 'fa-tag'))
         row = cursor.fetchone()
         category_id = row['id'] if row else None
         conn.commit()
@@ -1966,32 +1700,21 @@ def delete_store_category(id):
 @app.route('/api/recommend_crop', methods=['POST'])
 def recommend_crop():
     data = request.json
-    soil = data.get('soil')
-    season = data.get('season')
-    water = data.get('water')
-
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
-    cursor.execute(
-        "SELECT * FROM crop_rules WHERE soil_type = %s AND season = %s AND water_availability = %s",
-        (soil, season, water)
-    )
+    cursor.execute("SELECT * FROM crop_rules WHERE soil_type = %s AND season = %s AND water_availability = %s",
+                   (data.get('soil'), data.get('season'), data.get('water')))
     rules = cursor.fetchall()
     conn.close()
-
     if rules:
         return jsonify({'success': True, 'crops': rows_to_dict(rules)})
-    return jsonify({'success': False, 'message': "No crops match this criteria. Try changing inputs."})
+    return jsonify({'success': False, 'message': "No crops match. Try changing inputs."})
 
-
-# --- PARTNERSHIP ROUTES ---
 
 @app.route('/partnership')
 def partnership():
     return render_template('partnership.html',
-        admin_phone=ADMIN_WHATSAPP_NUMBER,
-        is_admin=session.get('admin_logged_in', False)
-    )
+        admin_phone=ADMIN_WHATSAPP_NUMBER, is_admin=session.get('admin_logged_in', False))
 
 
 @app.route('/submit_partnership', methods=['POST'])
@@ -2002,7 +1725,6 @@ def submit_partnership():
     phone = request.form['phone'].strip()
     category = request.form['product_category'].strip()
     message = request.form['message'].strip()
-
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("""
@@ -2011,11 +1733,9 @@ def submit_partnership():
     """, (brand, person, email, phone, category, message))
     conn.commit()
     conn.close()
-
-    wa_text = f"🤝 *New Partnership Inquiry!*\n\n🏢 *Brand:* {brand}\n👤 *Contact Person:* {person}\n📧 *Email:* {email}\n📞 *Phone:* {phone}\n📦 *Category:* {category}\n💬 *Message:* {message}"
+    wa_text = f"🤝 *New Partnership Inquiry!*\n\n🏢 {brand}\n👤 {person}\n📧 {email}\n📞 {phone}\n📦 {category}\n💬 {message}"
     import urllib.parse
-    wa_url = f"https://wa.me/{ADMIN_WHATSAPP_NUMBER}?text={urllib.parse.quote(wa_text)}"
-    return redirect(wa_url)
+    return redirect(f"https://wa.me/{ADMIN_WHATSAPP_NUMBER}?text={urllib.parse.quote(wa_text)}")
 
 
 @app.route('/admin/partnerships')
@@ -2040,66 +1760,43 @@ def delete_partnership(id):
     return redirect(url_for('admin_partnerships'))
 
 
-# --- PRODUCT DETAIL ---
-
 @app.route('/product/<int:id>')
 def product_detail(id):
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
-
     cursor.execute("SELECT * FROM products WHERE id=%s", (id,))
     product = cursor.fetchone()
-
     if not product:
         conn.close()
         return render_template('404.html'), 404
-
     product = dict(product)
-
     cursor.execute("SELECT * FROM product_media WHERE product_id=%s", (id,))
     media_items = cursor.fetchall()
-
     if not media_items and product.get('media_url'):
-        media_items = [{
-            'id': 0,
-            'media_url': product['media_url'],
-            'media_type': product['media_type'],
-            'youtube_url': product.get('youtube_url', '')
-        }]
-
+        media_items = [{'id': 0, 'media_url': product['media_url'],
+                        'media_type': product['media_type'],
+                        'youtube_url': product.get('youtube_url', '')}]
     conn.close()
-
-    return render_template('product_detail.html',
-        product=product,
+    return render_template('product_detail.html', product=product,
         media_items=rows_to_dict(media_items),
         admin_phone=ADMIN_WHATSAPP_NUMBER,
-        is_admin=session.get('admin_logged_in', False)
-    )
+        is_admin=session.get('admin_logged_in', False))
 
-
-# --- PACKED FOODS ---
 
 @app.route('/admin/add_packed_food', methods=['POST'])
 @login_required
 def add_packed_food():
     filename, media_type = save_file(request.files.get('media'))
-
-    title_en = request.form['title_en'].strip()
-    title_gu = request.form['title_gu'].strip()
-    category_en = request.form['category_en'].strip()
-    category_gu = request.form['category_gu'].strip()
-    price = float(request.form['price'])
-    stock = int(request.form['stock_qty'])
-    desc_en = request.form['description_en'].strip()
-    desc_gu = request.form['description_gu'].strip()
-
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("""
         INSERT INTO packed_foods (title_en, title_gu, category_en, category_gu,
-                                  price, stock_qty, description_en, description_gu, media_url)
+            price, stock_qty, description_en, description_gu, media_url)
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-    """, (title_en, title_gu, category_en, category_gu, price, stock, desc_en, desc_gu, filename))
+    """, (request.form['title_en'].strip(), request.form['title_gu'].strip(),
+          request.form['category_en'].strip(), request.form['category_gu'].strip(),
+          float(request.form['price']), int(request.form['stock_qty']),
+          request.form['description_en'].strip(), request.form['description_gu'].strip(), filename))
     conn.commit()
     conn.close()
     return redirect(url_for('admin_dashboard'))
@@ -2116,22 +1813,14 @@ def delete_packed_food(id):
     return redirect(url_for('admin_dashboard'))
 
 
-# --- WHATSAPP GROUPS ---
-
 @app.route('/admin/add_whatsapp_group', methods=['POST'])
 @login_required
 def add_whatsapp_group():
-    name = request.form['name'].strip()
-    description = request.form['description'].strip()
-    link = request.form['link'].strip()
-    category = request.form['category'].strip()
-
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute(
-        "INSERT INTO whatsapp_groups (name, description, link, category) VALUES (%s, %s, %s, %s)",
-        (name, description, link, category)
-    )
+    cursor.execute("INSERT INTO whatsapp_groups (name, description, link, category) VALUES (%s, %s, %s, %s)",
+                   (request.form['name'].strip(), request.form['description'].strip(),
+                    request.form['link'].strip(), request.form['category'].strip()))
     conn.commit()
     conn.close()
     return redirect(url_for('admin_dashboard'))
@@ -2152,13 +1841,11 @@ def delete_whatsapp_group_fixed(id):
 def api_active_groups():
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
-    cursor.execute("SELECT * FROM whatsapp_groups WHERE is_active = 1 ORDER BY id DESC LIMIT 3")
+    cursor.execute("SELECT * FROM whatsapp_groups WHERE is_active = TRUE ORDER BY id DESC LIMIT 3")
     groups = cursor.fetchall()
     conn.close()
     return jsonify(rows_to_dict(groups))
 
-
-# --- AGRI NEWS ---
 
 @app.route('/admin/agri-news')
 @login_required
@@ -2177,19 +1864,14 @@ def add_agri_news():
     title = request.form['title'].strip()
     content = request.form['content'].strip()
     link_url = request.form['link_url'].strip()
-
     filename = ""
     if 'news_image' in request.files and request.files['news_image'].filename != '':
         file = request.files['news_image']
-        filename = secure_filename(file.filename)
-        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-
+        filename, _ = save_file(file)
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute(
-        "INSERT INTO agri_news (title, image_url, content, link_url) VALUES (%s, %s, %s, %s)",
-        (title, filename, content, link_url)
-    )
+    cursor.execute("INSERT INTO agri_news (title, image_url, content, link_url) VALUES (%s, %s, %s, %s)",
+                   (title, filename, content, link_url))
     conn.commit()
     conn.close()
     return redirect(url_for('admin_agri_news'))

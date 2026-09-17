@@ -203,13 +203,30 @@ def get_esri_landcover(district_name):
 
 def get_db_connection():
     try:
-        conn = psycopg2.connect(
-            host=DB_HOST, database=DB_NAME, user=DB_USER,
-            password=DB_PASSWORD, port=DB_PORT,
-            cursor_factory=RealDictCursor
-        )
+        database_url = os.getenv('DATABASE_URL')
+
+        if database_url:
+            # Cloud / Vercel / Neon
+            conn = psycopg2.connect(
+                database_url,
+                cursor_factory=RealDictCursor
+            )
+            print("✅ Connected to Neon PostgreSQL")
+        else:
+            # Local development
+            conn = psycopg2.connect(
+                host=DB_HOST,
+                database=DB_NAME,
+                user=DB_USER,
+                password=DB_PASSWORD,
+                port=DB_PORT,
+                cursor_factory=RealDictCursor
+            )
+            print("✅ Connected to local PostgreSQL")
+
         conn.autocommit = False
         return conn
+
     except Exception as e:
         print(f"❌ Database connection error: {e}")
         raise

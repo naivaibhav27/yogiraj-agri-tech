@@ -380,66 +380,81 @@ document.addEventListener('DOMContentLoaded', loadPartners);
         {% endfor %}
     </div>
 </div>
-
 <!-- ============================================ -->
-<!-- 👑 FOUNDER SECTION -->
+<!-- 👑 FOUNDER SECTION (STATIC / HARDCODED) -->
 <!-- ============================================ -->
-{% if founder %}
 <div class="mb-12 mt-10 relative">
     <div class="flex items-center justify-between gap-3 mb-6">
         <div class="flex items-center gap-3">
             <span class="w-1 h-8 bg-gradient-to-b from-emerald-400 to-green-600 rounded-full"></span>
-            <h2 class="text-2xl font-extrabold text-white flex items-center gap-2"><i class="fa-solid fa-crown text-emerald-400 text-xl"></i> From the Founder's Desk</h2>
+            <h2 class="text-2xl font-extrabold text-white flex items-center gap-2">
+                <i class="fa-solid fa-crown text-emerald-400 text-xl"></i> From the Founder's Desk
+            </h2>
         </div>
-        {% if is_admin %}
-        <a href="/admin/founder" class="text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-1.5 border border-emerald-500/30 px-3 py-1.5 rounded-lg transition hover:bg-emerald-500/10"><i class="fa-solid fa-pen-to-square"></i> Modify Profile</a>
-        {% endif %}
     </div>
     <div class="glass-card rounded-3xl p-8 md:p-12 relative overflow-hidden border border-emerald-500/20 group hover:border-emerald-400/50 transition duration-500 shadow-2xl shadow-emerald-900/20">
         <div class="absolute -top-32 -right-32 w-96 h-96 bg-emerald-500 rounded-full opacity-20 blur-[100px] group-hover:opacity-30 transition duration-1000 pointer-events-none"></div>
         <div class="absolute -bottom-32 -left-32 w-96 h-96 bg-purple-500 rounded-full opacity-10 blur-[100px] group-hover:opacity-20 transition duration-1000 pointer-events-none"></div>
         <div class="relative z-10 flex flex-col lg:flex-row items-center gap-10">
+
+            <!-- Founder Image (Static) -->
             <div class="w-full lg:w-[35%] flex justify-center shrink-0">
                 <div class="relative w-full max-w-sm rounded-2xl p-1 bg-gradient-to-br from-emerald-400 via-green-500 to-emerald-600 shadow-[0_0_30px_rgba(16,185,129,0.3)]">
                     <div class="w-full aspect-[1.5/1] rounded-2xl overflow-hidden bg-slate-900 border-4 border-slate-900">
-                        {% if founder.video_url %}
-                            <iframe class="w-full h-full rounded-2xl" src="{{ founder.video_url }}" title="Founder Video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-                        {% elif founder.image_url %}
-                            <img src="/static/uploads/{{ founder.image_url }}" alt="{{ founder.name }}" class="w-full h-full object-cover rounded-2xl group-hover:scale-105 transition duration-700 ease-out">
-                        {% else %}
-                            <div class="w-full h-full bg-emerald-900/50 flex items-center justify-center text-6xl">👨‍🌾</div>
-                        {% endif %}
+                        <img src="/static/founder.jpeg" 
+                             alt="Mr. Santosh Valand" 
+                             class="w-full h-full object-cover rounded-2xl group-hover:scale-105 transition duration-700 ease-out"
+                             onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\'w-full h-full bg-emerald-900/50 flex items-center justify-center text-6xl\'>👨‍🌾</div>';">
                     </div>
                 </div>
             </div>
+
+            <!-- Founder Details (Static) -->
             <div class="w-full lg:w-[65%] text-center lg:text-left space-y-5">
-                <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold uppercase tracking-widest shadow-[0_0_15px_rgba(16,185,129,0.15)]"><i class="fa-solid fa-circle-check text-emerald-400"></i> Meet The Visionary</span>
+                <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold uppercase tracking-widest shadow-[0_0_15px_rgba(16,185,129,0.15)]">
+                    <i class="fa-solid fa-circle-check text-emerald-400"></i> Meet The Visionary
+                </span>
                 <div>
-                    <h3 class="text-4xl md:text-5xl font-extrabold text-white tracking-tight drop-shadow-lg">{{ founder.name }}</h3>
-                    <p class="text-emerald-400 font-semibold text-lg mt-1 flex items-center lg:justify-start justify-center gap-2"><i class="fa-solid fa-arrow-right text-xs opacity-70"></i> {{ founder.role }}</p>
+                    <h3 class="text-4xl md:text-5xl font-extrabold text-white tracking-tight drop-shadow-lg">
+                        Mr. Santosh Valand - UN-FAO Certified Specialist
+                    </h3>
+                    <p class="text-emerald-400 font-semibold text-lg mt-1 flex items-center lg:justify-start justify-center gap-2">
+                        <i class="fa-solid fa-arrow-right text-xs opacity-70"></i> Co-Founder & CEO of Yogiraj - Agritech - Neo farm
+                    </p>
                 </div>
                 <div class="relative max-w-xl lg:max-w-full mx-auto lg:mx-0">
                     <i class="fa-solid fa-quote-left absolute -left-3 -top-3 text-emerald-500/20 text-4xl"></i>
-                    <p class="text-slate-300 text-base md:text-lg font-medium italic pl-6 border-l-2 border-emerald-500/50">"{{ founder.quote if founder.quote else 'Empowering Farmers with the Power of AI.' }}"</p>
+                    <p class="text-slate-300 text-base md:text-lg font-medium italic pl-6 border-l-2 border-emerald-500/50">
+                        "Empowering Farmers with the Power of AI."
+                    </p>
                 </div>
-                <p class="text-slate-400 leading-relaxed text-sm md:text-base max-w-3xl mx-auto lg:mx-0">{{ founder.bio }}</p>
+                <p class="text-slate-400 leading-relaxed text-sm md:text-base max-w-3xl mx-auto lg:mx-0">
+                    Santosh Valand is the Founder and Administrator of Yogiraj Agritech, dedicated to supporting farmers with modern agricultural solutions and technology. His vision is to bridge the gap between traditional farming and modern technology by making innovative, practical, and AI-powered solutions accessible to farmers.
+                </p>
                 <div class="flex items-center gap-4 w-full lg:w-3/4 mx-auto lg:mx-0">
                     <div class="h-[1px] flex-grow bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent"></div>
                     <span class="text-emerald-400/50 text-xs uppercase tracking-[0.3em]">Connect</span>
                     <div class="h-[1px] flex-grow bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent"></div>
                 </div>
                 <div class="flex justify-center lg:justify-start gap-4 mt-2">
-                    <a href="#" class="w-12 h-12 rounded-xl glass-card border border-emerald-500/20 flex items-center justify-center text-emerald-400 hover:text-white hover:bg-emerald-500 hover:border-emerald-400 hover:shadow-[0_0_20px_rgba(16,185,129,0.4)] transition duration-300 transform hover:-translate-y-1"><i class="fa-brands fa-instagram text-xl"></i></a>
-                    <a href="#" class="w-12 h-12 rounded-xl glass-card border border-emerald-500/20 flex items-center justify-center text-emerald-400 hover:text-white hover:bg-emerald-500 hover:border-emerald-400 hover:shadow-[0_0_20px_rgba(16,185,129,0.4)] transition duration-300 transform hover:-translate-y-1"><i class="fa-brands fa-facebook-f text-xl"></i></a>
-                    <a href="#" class="w-12 h-12 rounded-xl glass-card border border-emerald-500/20 flex items-center justify-center text-emerald-400 hover:text-white hover:bg-emerald-500 hover:border-emerald-400 hover:shadow-[0_0_20px_rgba(16,185,129,0.4)] transition duration-300 transform hover:-translate-y-1"><i class="fa-brands fa-youtube text-xl"></i></a>
-                    <a href="#" class="w-12 h-12 rounded-xl glass-card border border-emerald-500/20 flex items-center justify-center text-emerald-400 hover:text-white hover:bg-emerald-500 hover:border-emerald-400 hover:shadow-[0_0_20px_rgba(16,185,129,0.4)] transition duration-300 transform hover:-translate-y-1"><i class="fa-brands fa-linkedin-in text-xl"></i></a>
+                    <a href="#" class="w-12 h-12 rounded-xl glass-card border border-emerald-500/20 flex items-center justify-center text-emerald-400 hover:text-white hover:bg-emerald-500 hover:border-emerald-400 transition duration-300 transform hover:-translate-y-1">
+                        <i class="fa-brands fa-instagram text-xl"></i>
+                    </a>
+                    <a href="#" class="w-12 h-12 rounded-xl glass-card border border-emerald-500/20 flex items-center justify-center text-emerald-400 hover:text-white hover:bg-emerald-500 hover:border-emerald-400 transition duration-300 transform hover:-translate-y-1">
+                        <i class="fa-brands fa-facebook-f text-xl"></i>
+                    </a>
+                    <a href="#" class="w-12 h-12 rounded-xl glass-card border border-emerald-500/20 flex items-center justify-center text-emerald-400 hover:text-white hover:bg-emerald-500 hover:border-emerald-400 transition duration-300 transform hover:-translate-y-1">
+                        <i class="fa-brands fa-youtube text-xl"></i>
+                    </a>
+                    <a href="#" class="w-12 h-12 rounded-xl glass-card border border-emerald-500/20 flex items-center justify-center text-emerald-400 hover:text-white hover:bg-emerald-500 hover:border-emerald-400 transition duration-300 transform hover:-translate-y-1">
+                        <i class="fa-brands fa-linkedin-in text-xl"></i>
+                    </a>
                 </div>
             </div>
         </div>
         <div class="absolute bottom-6 right-6 text-[10px] text-emerald-500/30 font-mono tracking-widest uppercase opacity-50 group-hover:opacity-100 transition duration-500">★ Premium Profile</div>
     </div>
 </div>
-{% endif %}
 
 <!-- ============================================ -->
 <!-- 📱 COMMUNITY -->

@@ -1298,16 +1298,31 @@ def landcover():
 def land_rentals():
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
+    
+    # Debug: Check karo DB mein kya hai
+    cursor.execute("SELECT COUNT(*) as cnt FROM land_rentals WHERE status = 'Available'")
+    count = cursor.fetchone()['cnt']
+    print(f"🏞️ Land rentals found: {count}")
+    
     cursor.execute("SELECT * FROM land_rentals WHERE status = 'Available' ORDER BY created_at DESC")
     land_listings = cursor.fetchall()
     conn.close()
+    
     land_listings = rows_to_dict(land_listings)
     for listing in land_listings:
         listing['media_items'] = get_media_items(
-            listing.get('media_url'), listing.get('media_type'), listing.get('youtube_url'))
-    return render_template('land_rentals.html', land_listings=land_listings,
-        admin_phone=ADMIN_WHATSAPP_NUMBER, is_admin=session.get('admin_logged_in', False))
-
+            listing.get('media_url'), 
+            listing.get('media_type'), 
+            listing.get('youtube_url')
+        )
+    
+    print(f"✅ Passing {len(land_listings)} listings to template")
+    
+    return render_template('land_rentals.html', 
+        land_listings=land_listings,
+        admin_phone=ADMIN_WHATSAPP_NUMBER, 
+        is_admin=session.get('admin_logged_in', False)
+    )
 
 @app.route('/community')
 def community():

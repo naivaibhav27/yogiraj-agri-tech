@@ -24,8 +24,12 @@
             <!-- Sale Banner -->
             <div class="relative rounded-2xl overflow-hidden mb-6 group">
                 {% if sale.banner_image %}
-                <img src="/static/uploads/{{ sale.banner_image }}" class="w-full h-52 md:h-72 object-cover transition-transform duration-700 group-hover:scale-105" alt="{{ sale.title }}">
-                <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent"></div>
+                    {% if sale.banner_image.startswith('http') %}
+                        <img src="{{ sale.banner_image }}" class="w-full h-52 md:h-72 object-cover transition-transform duration-700 group-hover:scale-105" alt="{{ sale.title }}">
+                    {% else %}
+                        <img src="/static/uploads/{{ sale.banner_image }}" class="w-full h-52 md:h-72 object-cover transition-transform duration-700 group-hover:scale-105" alt="{{ sale.title }}">
+                    {% endif %}
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent"></div>
                 {% else %}
                 <div class="w-full h-52 md:h-72 bg-gradient-to-br from-orange-600 via-red-600 to-rose-700 flex items-center justify-center relative overflow-hidden">
                     <div class="absolute inset-0 opacity-20" style="background-image: repeating-linear-gradient(45deg, #fff 0 2px, transparent 2px 22px);"></div>
@@ -82,7 +86,11 @@
                     </div>
                     {% if product.media_url %}
                     <div class="overflow-hidden rounded-xl mb-3">
-                        <img src="/static/uploads/{{ product.media_url }}" class="w-full h-40 object-cover transition-transform duration-500 group-hover/card:scale-110">
+                        {% if product.media_url.startswith('http') %}
+                            <img src="{{ product.media_url }}" class="w-full h-40 object-cover transition-transform duration-500 group-hover/card:scale-110">
+                        {% else %}
+                            <img src="/static/uploads/{{ product.media_url }}" class="w-full h-40 object-cover transition-transform duration-500 group-hover/card:scale-110">
+                        {% endif %}
                     </div>
                     {% endif %}
                     <h4 class="text-white font-semibold text-sm leading-snug mb-2">{{ product.title }}</h4>

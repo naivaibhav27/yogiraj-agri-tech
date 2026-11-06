@@ -39,7 +39,7 @@
             <!-- Image -->
             <div class="relative h-52 overflow-hidden bg-slate-900">
                 {% if item.media_url %}
-                <img src="/static/uploads/{{ item.media_url }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                <img src="{{ item.media_url }}"  class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
                 {% else %}
                 <div class="w-full h-full bg-gradient-to-br from-amber-900/40 to-slate-800 flex items-center justify-center text-5xl text-amber-500/50">
                     🌾

@@ -18,9 +18,10 @@
                 </div>
             {% elif rental.media_url %}
                 {% if rental.media_type == 'video' %}
-                    <video src="/static/uploads/{{ rental.media_url }}" controls class="w-full h-48 object-cover rounded-xl mb-4"></video>
+                    <video src="{{ rental.media_url }}" controls class="w-full h-48 object-cover rounded-xl mb-4"></video>
                 {% else %}
-                    <img src="/static/uploads/{{ rental.media_url }}" class="w-full h-48 object-cover rounded-xl mb-4">
+                    <img src="{{ rental.media_url }}" class="w-full h-48 object-cover rounded-xl mb-4" 
+                         onerror="this.src='https://images.unsplash.com/photo-1605334428209-9a78b73e4743?w=800';">
                 {% endif %}
             {% else %}
                 <div class="w-full h-48 bg-slate-800 rounded-xl mb-4 flex items-center justify-center text-slate-500 text-xs">
@@ -46,8 +47,8 @@
                 <span class="text-2xl font-black text-emerald-400">₹{{ rental.daily_rate }} <span class="text-xs text-slate-400 font-normal">/ Day</span></span>
             </div>
             <a href="https://wa.me/{{ admin_phone }}?text=Hello%20Yogiraj%20Agri-Tech,%20I%20want%20to%20rent%20{{ rental.title|urlencode }}" target="_blank" class="px-5 py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold rounded-xl text-xs transition duration-200 shadow-md flex items-center gap-2">
-    <i class="fa-brands fa-whatsapp"></i> Book Now
-</a>
+                <i class="fa-brands fa-whatsapp"></i> Book Now
+            </a>
         </div>
     </div>
     {% else %}

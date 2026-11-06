@@ -901,7 +901,13 @@ def delete_land_rental(id):
 def delete_product(id):
     conn = get_db_connection()
     cursor = conn.cursor()
+    cursor.execute("DELETE FROM product_media WHERE product_id=%s", (id,))
+    cursor.execute("DELETE FROM sale_products WHERE product_id=%s", (id,))
+    cursor.execute("DELETE FROM product_attributes WHERE product_id=%s", (id,))
+    
+    # Ab parent product delete karo
     cursor.execute("DELETE FROM products WHERE id=%s", (id,))
+    
     conn.commit()
     conn.close()
     return redirect(url_for('admin_dashboard'))
